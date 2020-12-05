@@ -4,7 +4,9 @@
 	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after.",
 	"version": "0.1.0",
 	"author": "veevelder",
-	"socket": true,
+	"minimumCoreVersion": "0.7.1",
+  	"compatibleCoreVersion": "0.7.8",
+	"esmodules": ["combater.js"],
 	"languages": [
 		{
 			"lang": "en",
@@ -12,12 +14,10 @@
 			"path": "lang/en.json"
 		}
 	],
-	"esmodules": ["combater.js"],
-	"styles" : [],
-	"packs": [],
-	"url" : "",
-	"download" : "",
-	"manifest" : "",
-	"minimumCoreVersion": "0.7.1",
-  	"compatibleCoreVersion": "0.7.8"
+	"system": "dnd5e",
+	"url" : "https://github.com/veevelder/combater",
+	"download" : "https://github.com/veevelder/combater/releases/download/0.1.0/combater.zip",
+	"manifest" : "https://raw.githubusercontent.com/veevelder/combater/main/module.json",
+	"license": "LICENSE",
+	"readme": "README.md"
 }
