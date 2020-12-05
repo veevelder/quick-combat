@@ -1,0 +1,23 @@
+{
+	"name": "combater",
+	"title": "Combater",
+	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after.",
+	"version": "0.1.0",
+	"author": "veevelder",
+	"socket": true,
+	"languages": [
+		{
+			"lang": "en",
+			"name": "English",
+			"path": "lang/en.json"
+		}
+	],
+	"esmodules": ["combater.js"],
+	"styles" : [],
+	"packs": [],
+	"url" : "",
+	"download" : "",
+	"manifest" : "",
+	"minimumCoreVersion": "0.7.1",
+  	"compatibleCoreVersion": "0.7.8"
+}
