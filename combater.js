@@ -152,7 +152,7 @@ class Combater {
 
 Hooks.once("ready", function() {
 	window.addEventListener("keydown", ev => {
-		if (ev.repeat)
+		if (ev.repeat || ev.target.type == "textarea" || ev.target.type == "select" || ev.target.type == "select")
 			return true;
 		//console.log(game.settings.get("combater", "key"), ev);
 		if(game.settings.get("combater", "key") == ev.key) {
