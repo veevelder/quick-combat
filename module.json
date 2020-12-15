@@ -16,7 +16,7 @@
 	],
 	"system": "dnd5e",
 	"url" : "https://github.com/veevelder/quick-combat",
-	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.3/combater.zip",
+	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.3/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",
 	"license": "LICENSE",
 	"readme": "README.md"
