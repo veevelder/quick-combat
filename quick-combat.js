@@ -1,10 +1,11 @@
-//import settingsExtender from './settings-extender.js';
+import settingsExtender from './settings-extender.js';
+settingsExtender();
 
 const registerSettings = () => {
 	// module settings
-	game.settings.register("combater", "playlist", {
-		name: "Combater.Playlist",
-		hint: "Combater.PlaylistHint",
+	game.settings.register("quick-combat", "playlist", {
+		name: "QuickCombat.Playlist",
+		hint: "QuickCombat.PlaylistHint",
 		scope: "world",
 		config: true,
 		default: 0,
@@ -13,32 +14,32 @@ const registerSettings = () => {
 		type: String
 	});
 	
-	game.settings.register("combater", "exp", {
-		name: "Combater.Exp",
-		hint: "Combater.ExpHint",
+	game.settings.register("quick-combat", "exp", {
+		name: "QuickCombat.Exp",
+		hint: "QuickCombat.ExpHint",
 		scope: "world",
 		config: true,
 		default: true,
 		type: Boolean
 	});
 	
-	game.settings.register("combater", "key", {
-		name: "Combater.Keybind",
-		hint: "Combater.KeybindHint",
+	game.settings.register("quick-combat", "key", {
+		name: "QuickCombat.Keybind",
+		hint: "QuickCombat.KeybindHint",
 		scope: "world",
 		config: true,
-		default: "c",
-		type: String
+		default: "Shift + C",
+		type: window.Azzu.SettingsTypes.KeyBinding,
 	});
 	
-	game.settings.register("combater", "oldPlaylist", {
+	game.settings.register("quick-combat", "oldPlaylist", {
 		scope: "world",
 		config: false,
 		default: "",
 		type: Object
 	});
 	
-	game.settings.register("combater", "inCombat", {
+	game.settings.register("quick-combat", "inCombat", {
 		scope: "world",
 		config: false,
 		default: false,
@@ -46,13 +47,12 @@ const registerSettings = () => {
 	});
 };
 
-class Combater {
+class QuickCombat {
 	static init() {
 		registerSettings();
 	}
 
 	static async rollInitiatives(combat) {
-		console.log("rolling combatants initiatives")
 		var combatants = combat.combatants;
 		for (var i = 0; i < combatants.length; i++) {
 			let rollType = CONST.DICE_ROLL_MODES.PUBLIC
@@ -64,8 +64,6 @@ class Combater {
 	}
 	
 	static async addCombatants() {
-		console.log("creating a new combat instance");
-
 		// Reference the combat encounter displayed in the Sidebar if none was provided
 		var combat = ui.combat.combat;
 		if ( !combat ) {
@@ -76,7 +74,6 @@ class Combater {
 				return ui.notifications.warn(game.i18n.localize("COMBAT.NoneActive"));
 			}
 		}
-		console.log("adding combatants to combat tracker");
 
 		var tokens = canvas.tokens.controlled.filter(t => t.inCombat === false).filter(function(token) {
 			if (token.actor.data.items.filter(c => c.name == "Pet").length == 0) {
@@ -91,8 +88,6 @@ class Combater {
 	}
 	
 	static awardExp(combat, userId) {
-		console.log("awarding experience to pcs");
-
 		let exp = 0;
 		let defeated = [];
 		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.defeated).forEach(function(a) { 
@@ -108,14 +103,14 @@ class Combater {
 				let new_exp = a.actor.data.data.details.xp.value + exp
 				let level_up = ""
 				if (new_exp >= a.actor.data.data.details.xp.max) {
-					level_up = "<td><strong>" + game.i18n.localize("Combater.LevelUp") + "</strong></td>"
+					level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
 				}
 				actor_exp_msg += "<tr><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 				a.actor.update({
 					"data.details.xp.value": new_exp
 				});
 			});
-			let msg = "<p>" + game.i18n.localize("Combater.ExperienceMessageStart") + " <strong>" + defeated.join(", ") + "</strong> " + game.i18n.localize("Combater.ExperienceMessageMid") + " <strong>" + exp + "</strong> " + game.i18n.localize("Combater.ExperienceMessageEnd") + "</p>" + actor_exp_msg + "</table>";
+			let msg = "<p>" + game.i18n.localize("QuickCombat.ExperienceMessageStart") + " <strong>" + defeated.join(", ") + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageMid") + " <strong>" + exp + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageEnd") + "</p>" + actor_exp_msg + "</table>";
 			ChatMessage.create({
 				user: userId, 
 				content: msg,
@@ -126,50 +121,53 @@ class Combater {
 	
 	static startPlaylist() {
 		var playlists = game.playlists.playing.map(a => a.data.name);
-		game.settings.set("combater", "oldPlaylist", playlists)
+		game.settings.set("quick-combat", "oldPlaylist", playlists)
 		game.playlists.playing.forEach(function(playing) {
 			playing.stopAll()
 		});
-		console.log("Saving/Stopping Current Playlists", game.settings.get("combater", "oldPlaylist"))
 
-		var name = game.settings.settings.get("combater.playlist").choices[game.settings.get("combater", "playlist")]
-		console.log("Starting Combat Playlist", name);
+		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
 		game.playlists.getName(name).playAll();
 	}
 	
 	static stopPlaylist() {
-		var name = game.settings.settings.get("combater.playlist").choices[game.settings.get("combater", "playlist")]
-		console.log("Stopping Combat Playlist", name);
+		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
 		game.playlists.getName(name).stopAll();
 
-		console.log("Starting Old Playlists");
-		game.settings.get("combater", "oldPlaylist").forEach(function(playlist) {
+		game.settings.get("quick-combat", "oldPlaylist").forEach(function(playlist) {
 			game.playlists.getName(playlist).playAll();
 		})
-		game.settings.set("combater", "oldPlaylist", [])
+		game.settings.set("quick-combat", "oldPlaylist", [])
 	}
 }
 
 Hooks.once("ready", function() {
 	window.addEventListener("keydown", ev => {
-		if (ev.repeat || ev.target.type == "textarea" || ev.target.type == "select" || ev.target.type == "select")
+		//only allow for non repeat keys on the body by the GM
+		if (ev.repeat || document.activeElement.tagName !== "BODY" || !game.users.filter(a => a.id == game.userId)[0].isGM)
 			return true;
-		//console.log(game.settings.get("combater", "key"), ev);
-		if(game.settings.get("combater", "key") == ev.key) {
-			if (game.settings.get("combater", "inCombat")) {
-				game.combat.endCombat();
-			}
-			else {
-				//check if combat tracker has combatants
-				if(combat.combatants && combat.combatants.length > 0) {
-					game.combat.startCombat();
-				}
-				//check if GM has any selected tokens
-				else if (canvas.tokens.controlled.length === 0) {
-					ui.notifications.error(game.i18n.localize("Combater.KeyError"));
+
+		let setting_key = game.settings.get("quick-combat", "key")
+		if (setting_key != null) {
+			const key = window.Azzu.SettingsTypes.KeyBinding.parse(setting_key)
+			if (window.Azzu.SettingsTypes.KeyBinding.eventIsForBinding(ev, key)) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				if (game.settings.get("quick-combat", "inCombat")) {
+					game.combat.endCombat();
 				}
 				else {
-					Combater.addCombatants();
+					//check if combat tracker has combatants
+					if(combat.combatants && combat.combatants.length > 0) {
+						game.combat.startCombat();
+					}
+					//check if GM has any selected tokens
+					else if (canvas.tokens.controlled.length === 0) {
+						ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+					}
+					else {
+						QuickCombat.addCombatants();
+					}
 				}
 			}
 		}
@@ -177,26 +175,25 @@ Hooks.once("ready", function() {
 });
 
 Hooks.on("ready", function () {
-	Combater.init();
+	QuickCombat.init();
 });
 
 Hooks.on("preDeleteCombat", (combat, options, userId) => {
-	console.log("in end combat hook");
-	game.settings.set("combater", "inCombat", false);
-	if (game.settings.get("combater", "exp")) {
-		Combater.awardExp(combat, userId);
+	game.settings.set("quick-combat", "inCombat", false);
+	if (game.settings.get("quick-combat", "exp")) {
+		QuickCombat.awardExp(combat, userId);
 	}
-	if (game.settings.get("combater", "playlist") != 0) {
-		Combater.stopPlaylist();
+	if (game.settings.get("quick-combat", "playlist") != 0) {
+		QuickCombat.stopPlaylist();
 	}
 });
 
 Hooks.on("updateCombat", (combat, update, options, userId) => {
-	if (!game.settings.get("combater", "inCombat")) {
-		game.settings.set("combater", "inCombat", true);
-		Combater.rollInitiatives(combat);
-		if (game.settings.get("combater", "playlist") != 0) {
-			Combater.startPlaylist();
+	if (!game.settings.get("quick-combat", "inCombat")) {
+		game.settings.set("quick-combat", "inCombat", true);
+		QuickCombat.rollInitiatives(combat);
+		if (game.settings.get("quick-combat", "playlist") != 0) {
+			QuickCombat.startPlaylist();
 		}
 	}
 });

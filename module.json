@@ -1,12 +1,12 @@
 {
-	"name": "combater",
-	"title": "Combater",
-	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after.",
-	"version": "0.1.0",
+	"name": "quick-combat",
+	"title": "Quick Combat",
+	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after combat.",
+	"version": "0.1.3",
 	"author": "veevelder",
 	"minimumCoreVersion": "0.7.1",
   	"compatibleCoreVersion": "0.7.8",
-	"esmodules": ["combater.js"],
+	"esmodules": ["quick-combat.js"],
 	"languages": [
 		{
 			"lang": "en",
@@ -16,7 +16,7 @@
 	],
 	"system": "dnd5e",
 	"url" : "https://github.com/veevelder/combater",
-	"download" : "https://github.com/veevelder/combater/releases/download/0.1.0/combater.zip",
+	"download" : "https://github.com/veevelder/combater/releases/download/0.1.0/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/combater/main/module.json",
 	"license": "LICENSE",
 	"readme": "README.md"
