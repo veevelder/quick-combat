@@ -55,6 +55,9 @@ class QuickCombat {
 	static async rollInitiatives(combat) {
 		var combatants = combat.combatants;
 		for (var i = 0; i < combatants.length; i++) {
+			if (combatants[i].initiative) {
+				continue;
+			}
 			let rollType = CONST.DICE_ROLL_MODES.PUBLIC
 			if (combatants[i].hidden) {
 				rollType = CONST.DICE_ROLL_MODES.PRIVATE
@@ -142,6 +145,10 @@ class QuickCombat {
 }
 
 Hooks.once("ready", function() {
+	//only allow for the GM
+	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
+		return true;
+
 	window.addEventListener("keydown", ev => {
 		//only allow for non repeat keys on the body by the GM
 		if (ev.repeat || document.activeElement.tagName !== "BODY" || !game.users.filter(a => a.id == game.userId)[0].isGM)
@@ -154,7 +161,13 @@ Hooks.once("ready", function() {
 				ev.preventDefault();
 				ev.stopPropagation();
 				if (game.settings.get("quick-combat", "inCombat")) {
-					game.combat.endCombat();
+					let combat = game.combat;
+					if (combat) {
+						combat.endCombat();
+					}
+					else {
+						game.settings.set("quick-combat", "inCombat", false)
+					}
 				}
 				else {
 					//check if combat tracker has combatants
@@ -175,10 +188,14 @@ Hooks.once("ready", function() {
 });
 
 Hooks.on("ready", function () {
+	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
+		return true;
 	QuickCombat.init();
 });
 
 Hooks.on("preDeleteCombat", (combat, options, userId) => {
+	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
+		return true;
 	game.settings.set("quick-combat", "inCombat", false);
 	if (game.settings.get("quick-combat", "exp")) {
 		QuickCombat.awardExp(combat, userId);
@@ -188,7 +205,9 @@ Hooks.on("preDeleteCombat", (combat, options, userId) => {
 	}
 });
 
-Hooks.on("updateCombat", (combat, update, options, userId) => {
+Hooks.on("preUpdateCombat", (combat, route, options, userId) => {
+	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
+		return true;
 	if (!game.settings.get("quick-combat", "inCombat")) {
 		game.settings.set("quick-combat", "inCombat", true);
 		QuickCombat.rollInitiatives(combat);

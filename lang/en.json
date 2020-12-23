@@ -2,7 +2,7 @@
 	"QuickCombat.Playlist" : "Combat Playlist",
 	"QuickCombat.PlaylistHint" : "Select a Playlist to use as Combat Music",
 	"QuickCombat.Exp" : "Combat Experience Tracking",
-	"QuickCombat.ExpHint" : "Auto Update PCs Experience when ending combat",
+	"QuickCombat.ExpHint" : "Update PCs Experience when ending combat (dnd5e only!)",
 	"QuickCombat.Keybind" : "Combat Toggle Keybind",
 	"QuickCombat.KeybindHint" : "When selecting tokens on a scene it will start combat, otherwise it will end it",
 	"QuickCombat.LevelUp": "LEVEL UP!",
