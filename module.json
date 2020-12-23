@@ -2,10 +2,10 @@
 	"name": "quick-combat",
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after combat.",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"author": "veevelder",
 	"minimumCoreVersion": "0.7.1",
-  	"compatibleCoreVersion": "0.7.8",
+  	"compatibleCoreVersion": "0.7.9",
 	"esmodules": ["quick-combat.js"],
 	"languages": [
 		{
@@ -16,7 +16,7 @@
 	],
 	"system": "dnd5e",
 	"url" : "https://github.com/veevelder/quick-combat",
-	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.3/quick-combat.zip",
+	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.4/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",
 	"license": "LICENSE",
 	"readme": "README.md"
