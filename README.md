@@ -20,7 +20,7 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 * **Combat Toggle Keybind** - Keybind combination to start and stop combat.
 
 ### Start Combat
-![Quick Combat Tokens Selected](images/tokens-selected)
+![Quick Combat Tokens Selected](images/tokens-selected.png)
 
 Select all tokens for combat.
 
