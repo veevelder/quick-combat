@@ -14,6 +14,15 @@ const registerSettings = () => {
 		type: String
 	});
 	
+	game.settings.register("quick-combat", "npcroll", {
+		name: "QuickCombat.NPCRoll",
+		hint: "QuickCombat.NPCRollHint",
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean
+	});
+	
 	game.settings.register("quick-combat", "exp", {
 		name: "QuickCombat.Exp",
 		hint: "QuickCombat.ExpHint",
@@ -56,6 +65,9 @@ class QuickCombat {
 		var combatants = combat.combatants;
 		for (var i = 0; i < combatants.length; i++) {
 			if (combatants[i].initiative) {
+				continue;
+			}
+			if (game.settings.get("quick-combat", "npcroll") && combatants[i].actor.hasPlayerOwner) {
 				continue;
 			}
 			let rollType = CONST.DICE_ROLL_MODES.PUBLIC
