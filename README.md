@@ -1,4 +1,4 @@
-# Quick Combat module for FVTT,
+# Quick Combat module for FVTT
 
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
 
@@ -6,6 +6,7 @@ Adds Auto Experience Tracking. When NPCs are defeated it will add the experience
 
 Adds a Hotkey to quicly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
 
+This module has been tested with the D&D 5E system. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
 
 ## Installation Instructions
 
