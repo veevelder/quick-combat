@@ -11,5 +11,7 @@
 	"QuickCombat.ExperienceMessageEnd": "experience!",
 	"QuickCombat.KeyError": "You must select at least one or more tokens on the map, or add tokens to combat, before starting combat.",
 	"QuickCombat.NPCRoll": "Only Roll Initiative for NPCs?",
-	"QuickCombat.NPCRollHint": "Will add all selected tokens but only roll NPCs, allowing for players to roll for themselves."
+	"QuickCombat.NPCRollHint": "Will add all selected tokens but only roll NPCs, allowing for players to roll for themselves.",
+	"QuickCombat.ExpGM": "GM Experience Whisper",
+	"QuickCombat.ExpGMHint": "Send the Experience Message only to the GM."
 }

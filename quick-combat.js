@@ -32,6 +32,15 @@ const registerSettings = () => {
 		type: Boolean
 	});
 	
+	game.settings.register("quick-combat", "expgm", {
+		name: "QuickCombat.ExpGM",
+		hint: "QuickCombat.ExpGMHint",
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean
+	});
+	
 	game.settings.register("quick-combat", "key", {
 		name: "QuickCombat.Keybind",
 		hint: "QuickCombat.KeybindHint",
@@ -126,11 +135,21 @@ class QuickCombat {
 				});
 			});
 			let msg = "<p>" + game.i18n.localize("QuickCombat.ExperienceMessageStart") + " <strong>" + defeated.join(", ") + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageMid") + " <strong>" + exp + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageEnd") + "</p>" + actor_exp_msg + "</table>";
-			ChatMessage.create({
-				user: userId, 
-				content: msg,
-				type: CONST.CHAT_MESSAGE_TYPES.OTHER
-			}, {});
+			
+			if (game.settings.get("quick-combat", "expgm")) {
+				ChatMessage.create({
+					user: userId, 
+					content: msg,
+					whisper: game.users.entities.filter(u => u.isGM).map(u => u._id)
+				}, {});
+			}
+			else {
+				ChatMessage.create({
+					user: userId, 
+					content: msg,
+					type: CONST.CHAT_MESSAGE_TYPES.OTHER
+				}, {});
+			}
 		}
 	}
 	
