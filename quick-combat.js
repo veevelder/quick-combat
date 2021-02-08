@@ -108,7 +108,8 @@ class QuickCombat {
 		// Process each controlled token, as well as the reference token
 		const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.data.hidden}});
 		await combat.createEmbeddedEntity("Combatant", createData)
-		combat.startCombat();
+		await QuickCombat.rollInitiatives(combat);
+		await combat.startCombat();
 	}
 	
 	static awardExp(combat, userId) {
@@ -241,7 +242,6 @@ Hooks.on("preUpdateCombat", (combat, route, options, userId) => {
 		return true;
 	if (!game.settings.get("quick-combat", "inCombat")) {
 		game.settings.set("quick-combat", "inCombat", true);
-		QuickCombat.rollInitiatives(combat);
 		if (game.settings.get("quick-combat", "playlist") != 0) {
 			QuickCombat.startPlaylist();
 		}
