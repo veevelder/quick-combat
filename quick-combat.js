@@ -71,30 +71,13 @@ class QuickCombat {
 	}
 
 	static async rollInitiatives(combat) {
-		//if group initiative is enabled
-		var gi = game.modules.get("group-initiative");
-		var combatants = combat.combatants;
-		if(gi && gi.active) {
-			// check to see if it was enabled
-			if (game.settings.get("group-initiative", "rollGroupInitiative")) {
-				//do group npc rolls
-				combat.rollNPC()
-			}
+		await combat.rollNPC()
+		//check for PC roll option
+		if (game.settings.get("quick-combat", "npcroll")) {
+			return;
 		}
-		
-		for (var i = 0; i < combatants.length; i++) {
-			if (combatants[i].initiative) {
-				continue;
-			}
-			if (game.settings.get("quick-combat", "npcroll") && combatants[i].actor.hasPlayerOwner) {
-				continue;
-			}
-			let rollType = CONST.DICE_ROLL_MODES.PUBLIC
-			if (combatants[i].hidden) {
-				rollType = CONST.DICE_ROLL_MODES.PRIVATE
-			}
-			await combat.rollInitiative(combatants[i]._id, {messageOptions: {rollMode: rollType}})
-		}
+		//roll all PCs that haven't rolled initiative yet
+		await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a._id))
 	}
 	
 	static async addCombatants() {
