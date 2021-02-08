@@ -71,7 +71,17 @@ class QuickCombat {
 	}
 
 	static async rollInitiatives(combat) {
+		//if group initiative is enabled
+		var gi = game.modules.get("group-initiative");
 		var combatants = combat.combatants;
+		if(gi && gi.active) {
+			// check to see if it was enabled
+			if (game.settings.get("group-initiative", "rollGroupInitiative")) {
+				//do group npc rolls
+				combat.rollNPC()
+			}
+		}
+		
 		for (var i = 0; i < combatants.length; i++) {
 			if (combatants[i].initiative) {
 				continue;

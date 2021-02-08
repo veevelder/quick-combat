@@ -65,3 +65,5 @@ If set up will only roll for NPC combatants and not PCs.
 
 If tokens are hidden, it will hide any rolls from other players.
 
+### Other Mod Integrations
+Works with https://github.com/tonifisler/foundry-group-initiative and will roll any NPC as a group if installed and enabled.
