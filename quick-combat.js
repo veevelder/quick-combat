@@ -23,12 +23,18 @@ const registerSettings = () => {
 		type: Boolean
 	});
 	
+	var def = false;
+	var conf = false;
+	if (CONFIG.hasOwnProperty("DND5E")) {
+		def = true;
+		conf = true;
+	}
 	game.settings.register("quick-combat", "exp", {
 		name: "QuickCombat.Exp",
 		hint: "QuickCombat.ExpHint",
 		scope: "world",
-		config: true,
-		default: true,
+		config: conf,
+		default: def,
 		type: Boolean
 	});
 	
@@ -36,7 +42,7 @@ const registerSettings = () => {
 		name: "QuickCombat.ExpGM",
 		hint: "QuickCombat.ExpGMHint",
 		scope: "world",
-		config: true,
+		config: conf,
 		default: false,
 		type: Boolean
 	});
@@ -48,6 +54,15 @@ const registerSettings = () => {
 		config: true,
 		default: "Shift + C",
 		type: window.Azzu.SettingsTypes.KeyBinding,
+	});
+	
+	game.settings.register("quick-combat", "rmDefeated", {
+		name: "QuickCombat.RemoveDefeated",
+		hint: "QuickCombat.RemoveDefeatedHint",
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
 	});
 	
 	game.settings.register("quick-combat", "oldPlaylist", {
@@ -167,6 +182,13 @@ class QuickCombat {
 		})
 		game.settings.set("quick-combat", "oldPlaylist", [])
 	}
+	
+	static async removeDefeated(combat, userId) {
+		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.defeated).forEach(function(a) {
+			let scene = game.scenes.active;
+			scene.deleteEmbeddedEntity("Token", a.token._id)
+		});
+	}
 }
 
 Hooks.once("ready", function() {
@@ -238,5 +260,13 @@ Hooks.on("preUpdateCombat", (combat, route, options, userId) => {
 		if (game.settings.get("quick-combat", "playlist") != 0) {
 			QuickCombat.startPlaylist();
 		}
+	}
+});
+
+Hooks.on("deleteCombat", (combat, options, userId) => {
+	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
+		return true;
+	if (game.settings.get("quick-combat", "rmDefeated")) {
+		QuickCombat.removeDefeated(combat, userId);
 	}
 });

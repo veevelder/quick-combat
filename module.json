@@ -14,7 +14,7 @@
 			"path": "lang/en.json"
 		}
 	],
-	"system": "dnd5e",
+	"system": "",
 	"url" : "https://github.com/veevelder/quick-combat",
 	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.8/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",

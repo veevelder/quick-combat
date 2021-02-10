@@ -2,7 +2,9 @@
 
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
 
-Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs.
+Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs. Will only work on DND5E other systems this setting is not available.
+
+Other Systems are planned for experience tracking support in the future, as of now DND5E is the only system that is supported. 
 
 Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
 
@@ -16,7 +18,7 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 
 * **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives.
-* **Combat Experience Tracking** - For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
+* **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **Combat Toggle Keybind** - Keybind combination to start and stop combat.
 
 ### Start Combat

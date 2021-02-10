@@ -13,5 +13,7 @@
 	"QuickCombat.NPCRoll": "Only Roll Initiative for NPCs?",
 	"QuickCombat.NPCRollHint": "Will add all selected tokens but only roll NPCs, allowing for players to roll for themselves.",
 	"QuickCombat.ExpGM": "GM Experience Whisper",
-	"QuickCombat.ExpGMHint": "Send the Experience Message only to the GM."
+	"QuickCombat.ExpGMHint": "Send the Experience Message only to the GM.",
+	"QuickCombat.RemoveDefeated": "Remove Defeated NPCs?",
+	"QuickCombat.RemoveDefeatedHint": "Will remove all defeated NPCs tokens that were in combat from the scene."
 }
