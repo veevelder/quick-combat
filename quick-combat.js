@@ -137,6 +137,11 @@ class QuickCombat {
 				let level_up = ""
 				if (new_exp >= a.actor.data.data.details.xp.max) {
 					level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
+					let cl = a.actor.items.find(a => a.type == "class")
+					cl.update({
+						"data.levels": cl.data.data.levels + 1
+					})					
+					
 				}
 				actor_exp_msg += "<tr><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 				a.actor.update({
