@@ -19,7 +19,9 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 * **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives.
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
+* **GM Experience Whisper** - Only Message the GM the experience gained.
 * **Combat Toggle Keybind** - Keybind combination to start and stop combat.
+* **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
 
 ### Start Combat
 ![Quick Combat Tokens Selected](images/tokens-selected.png)
@@ -61,9 +63,4 @@ Stop Combat and will start the "Background" playlist again.
 If set up will only roll for NPC combatants and not PCs.
 
 ![Quick Combat NPC Rolls](images/npc-roll.png)
-
-### Hidden Tokens
-![Quick Combat Hidden Rolls](images/hidden-rolls.png)
-
-If tokens are hidden, it will hide any rolls from other players.
 
