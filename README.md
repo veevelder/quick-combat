@@ -1,3 +1,4 @@
+![Latest Release Download Count](https://img.shields.io/github/downloads/veevelder/quick-combat/latest/quick-combat.zip) ![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fquick-combat&colorB=4aa94a) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Fveevelder%2Fquick-combat%2Fmaster%2Fmodule.json&label=Foundry%20Version&query=$.compatibleCoreVersion&colorB=orange)
 # Quick Combat module for FVTT
 
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
