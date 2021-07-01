@@ -2,10 +2,10 @@
 	"name": "quick-combat",
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after combat.",
-	"version": "0.1.9",
+	"version": "0.2.0",
 	"author": "veevelder",
 	"minimumCoreVersion": "0.7.1",
-  	"compatibleCoreVersion": "0.7.9",
+  	"compatibleCoreVersion": "0.8.8",
 	"esmodules": ["quick-combat.js"],
 	"languages": [
 		{
@@ -14,10 +14,15 @@
 			"path": "lang/en.json"
 		}
 	],
-	"system": "",
 	"url" : "https://github.com/veevelder/quick-combat",
-	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.1.9/quick-combat.zip",
+	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.2.0/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",
-	"license": "LICENSE",
-	"readme": "README.md"
+	"license": "https://github.com/veevelder/quick-combat/blob/main/LICENSE",
+	"readme": "https://github.com/veevelder/quick-combat/blob/main/README.md",
+	"dependencies": [
+		{
+			"name": "settings-extender"
+		}
+	]
+
 }

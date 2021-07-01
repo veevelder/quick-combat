@@ -1,5 +1,5 @@
-import settingsExtender from './settings-extender.js';
-settingsExtender();
+import {KeyBinding} from '../settings-extender/settings-extender.js'
+
 
 const registerSettings = () => {
 	// module settings
@@ -10,7 +10,7 @@ const registerSettings = () => {
 		config: true,
 		default: 0,
 		isSelect: true,
-		choices: ["None"].concat(game.playlists.entities.map(x => x.data.name)),
+		choices: ["None"].concat(game.playlists.contents.map(x => x.data.name)),
 		type: String
 	});
 	
@@ -53,7 +53,7 @@ const registerSettings = () => {
 		scope: "world",
 		config: true,
 		default: "Shift + C",
-		type: window.Azzu.SettingsTypes.KeyBinding,
+		type: KeyBinding,
 	});
 	
 	game.settings.register("quick-combat", "rmDefeated", {
@@ -92,7 +92,7 @@ class QuickCombat {
 			return;
 		}
 		//roll all PCs that haven't rolled initiative yet
-		await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a._id))
+		await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
 	}
 	
 	static async addCombatants() {
@@ -100,7 +100,7 @@ class QuickCombat {
 		var combat = ui.combat.combat;
 		if ( !combat ) {
 			if ( game.user.isGM ) {
-				combat = await game.combats.object.create({scene: canvas.scene._id, active: true});
+				combat = await game.combats.documentClass.create({scene: canvas.scene.id, active: true});
 			}
 			else {
 				return ui.notifications.warn(game.i18n.localize("COMBAT.NoneActive"));
@@ -115,7 +115,7 @@ class QuickCombat {
 		
 		// Process each controlled token, as well as the reference token
 		const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.data.hidden}});
-		await combat.createEmbeddedEntity("Combatant", createData)
+		await combat.createEmbeddedDocuments("Combatant", createData)
 		await QuickCombat.rollInitiatives(combat);
 		await combat.startCombat();
 	}
@@ -123,10 +123,14 @@ class QuickCombat {
 	static awardExp(combat, userId) {
 		let exp = 0;
 		let defeated = [];
-		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.defeated).forEach(function(a) { 
+		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.data.defeated).forEach(function(a) { 
 			exp += a.actor.data.data.details.xp.value;
 			defeated.push(a.name); 
 		});
+		console.log("exp")
+		console.log(exp)
+		console.log("defeated")
+		console.log(defeated)
 		let pcs = combat.combatants.filter(x => x.actor.hasPlayerOwner);
 		exp = Math.round(exp / pcs.length);
 
@@ -154,7 +158,7 @@ class QuickCombat {
 				ChatMessage.create({
 					user: userId, 
 					content: msg,
-					whisper: game.users.entities.filter(u => u.isGM).map(u => u._id)
+					whisper: game.users.contents.filter(u => u.isGM).map(u => u.id)
 				}, {});
 			}
 			else {
@@ -191,7 +195,7 @@ class QuickCombat {
 	static async removeDefeated(combat, userId) {
 		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.defeated).forEach(function(a) {
 			let scene = game.scenes.active;
-			scene.deleteEmbeddedEntity("Token", a.token._id)
+			scene.deleteEmbeddedEntity("Token", a.token.id)
 		});
 	}
 }
@@ -208,8 +212,8 @@ Hooks.once("ready", function() {
 
 		let setting_key = game.settings.get("quick-combat", "key")
 		if (setting_key != null) {
-			const key = window.Azzu.SettingsTypes.KeyBinding.parse(setting_key)
-			if (window.Azzu.SettingsTypes.KeyBinding.eventIsForBinding(ev, key)) {
+			const key = KeyBinding.parse(setting_key)
+			if (KeyBinding.eventIsForBinding(ev, key)) {
 				ev.preventDefault();
 				ev.stopPropagation();
 				if (game.settings.get("quick-combat", "inCombat")) {
