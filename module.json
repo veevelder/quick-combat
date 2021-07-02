@@ -4,7 +4,7 @@
 	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after combat.",
 	"version": "0.2.0",
 	"author": "veevelder",
-	"minimumCoreVersion": "0.7.1",
+	"minimumCoreVersion": "0.8.0",
   	"compatibleCoreVersion": "0.8.8",
 	"esmodules": ["quick-combat.js"],
 	"languages": [
