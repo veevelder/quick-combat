@@ -2,7 +2,7 @@
 	"name": "quick-combat",
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and addes Experience to PCs after combat.",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"author": "veevelder",
 	"minimumCoreVersion": "0.8.0",
   	"compatibleCoreVersion": "0.8.8",
@@ -15,7 +15,7 @@
 		}
 	],
 	"url" : "https://github.com/veevelder/quick-combat",
-	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.2.0/quick-combat.zip",
+	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.2.1/quick-combat.zip",
 	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",
 	"license": "https://github.com/veevelder/quick-combat/blob/main/LICENSE",
 	"readme": "https://github.com/veevelder/quick-combat/blob/main/README.md",
