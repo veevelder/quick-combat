@@ -5,6 +5,8 @@
 	"QuickCombat.ExpHint" : "Update PCs Experience when ending combat (dnd5e only!)",
 	"QuickCombat.Keybind" : "Combat Toggle Keybind",
 	"QuickCombat.KeybindHint" : "When selecting tokens on a scene it will start combat, otherwise it will end it",
+	"QuickCombat.KeybindAlt" : "Combat Toggle Keybind WITHOUT playlist",
+	"QuickCombat.KeybindAltHint" : "When selecting tokens on a scene it will start combat WITHOUT starting the combat playlist, otherwise it will end it",
 	"QuickCombat.LevelUp": "LEVEL UP!",
 	"QuickCombat.ExperienceMessageStart": "For defeating",
 	"QuickCombat.ExperienceMessageMid": "each of you get",
@@ -15,5 +17,6 @@
 	"QuickCombat.ExpGM": "GM Experience Whisper",
 	"QuickCombat.ExpGMHint": "Send the Experience Message only to the GM.",
 	"QuickCombat.RemoveDefeated": "Remove Defeated NPCs?",
-	"QuickCombat.RemoveDefeatedHint": "Will remove all defeated NPCs tokens that were in combat from the scene."
+	"QuickCombat.RemoveDefeatedHint": "Will remove all defeated NPCs tokens that were in combat from the scene.",
+	"QuickCombat.noPlayerError": "No actors in combat had a player, cannot calculate experience!"
 }

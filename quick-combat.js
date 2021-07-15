@@ -1,5 +1,7 @@
 import {KeyBinding} from '../settings-extender/settings-extender.js'
 
+var skipPlaylist = false;
+
 class QuickCombat {
 	static init() {
 		console.debug("quick-combat | register settings")
@@ -54,6 +56,15 @@ class QuickCombat {
 			scope: "world",
 			config: true,
 			default: "Shift + C",
+			type: KeyBinding,
+		});
+
+		game.settings.register("quick-combat", "keyalt", {
+			name: "QuickCombat.KeybindAlt",
+			hint: "QuickCombat.KeybindAltHint",
+			scope: "world",
+			config: true,
+			default: "Shift + Alt + C",
 			type: KeyBinding,
 		});
 
@@ -130,46 +141,51 @@ class QuickCombat {
 			defeated.push(a.name); 
 		});
 		let pcs = combat.combatants.filter(x => x.actor.hasPlayerOwner);
-		exp = Math.round(exp / pcs.length);
-
-		console.log(`quick-combat | awarding exp ${exp} to PCs`)
-		if (exp != 0 && !isNaN(exp)) {
-			let actor_exp_msg = "<table>";
-			pcs.forEach(function(a) {
-				let new_exp = a.actor.data.data.details.xp.value + exp
-				let level_up = ""
-				if (new_exp >= a.actor.data.data.details.xp.max) {
-					level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
-					let cl = a.actor.items.find(a => a.type == "class")
-					cl.update({
-						"data.levels": cl.data.data.levels + 1
-					})					
-					
-				}
-				actor_exp_msg += "<tr><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
-				a.actor.update({
-					"data.details.xp.value": new_exp
-				});
-			});
-			let msg = "<p>" + game.i18n.localize("QuickCombat.ExperienceMessageStart") + " <strong>" + defeated.join(", ") + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageMid") + " <strong>" + exp + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageEnd") + "</p>" + actor_exp_msg + "</table>";
-			
-			if (game.settings.get("quick-combat", "expgm")) {
-				ChatMessage.create({
-					user: userId, 
-					content: msg,
-					whisper: game.users.contents.filter(u => u.isGM).map(u => u.id)
-				}, {});
-			}
-			else {
-				ChatMessage.create({
-					user: userId, 
-					content: msg,
-					type: CONST.CHAT_MESSAGE_TYPES.OTHER
-				}, {});
-			}
+		if (pcs.length < 1 ) {
+			ui.notifications.error(game.i18n.localize("QuickCombat.noPlayerError"));
 		}
 		else {
-			console.info("quick-combat | no exp for PCs")
+			exp = Math.round(exp / pcs.length);
+
+			console.log(`quick-combat | awarding exp ${exp} to PCs`)
+			if (exp != 0 && !isNaN(exp)) {
+				let actor_exp_msg = "<table>";
+				pcs.forEach(function(a) {
+					let new_exp = a.actor.data.data.details.xp.value + exp
+					let level_up = ""
+					if (new_exp >= a.actor.data.data.details.xp.max) {
+						level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
+						let cl = a.actor.items.find(a => a.type == "class")
+						cl.update({
+							"data.levels": cl.data.data.levels + 1
+						})					
+						
+					}
+					actor_exp_msg += "<tr><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
+					a.actor.update({
+						"data.details.xp.value": new_exp
+					});
+				});
+				let msg = "<p>" + game.i18n.localize("QuickCombat.ExperienceMessageStart") + " <strong>" + defeated.join(", ") + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageMid") + " <strong>" + exp + "</strong> " + game.i18n.localize("QuickCombat.ExperienceMessageEnd") + "</p>" + actor_exp_msg + "</table>";
+				
+				if (game.settings.get("quick-combat", "expgm")) {
+					ChatMessage.create({
+						user: userId, 
+						content: msg,
+						whisper: game.users.contents.filter(u => u.isGM).map(u => u.id)
+					}, {});
+				}
+				else {
+					ChatMessage.create({
+						user: userId, 
+						content: msg,
+						type: CONST.CHAT_MESSAGE_TYPES.OTHER
+					}, {});
+				}
+			}
+			else {
+				console.info("quick-combat | no exp for PCs")
+			}
 		}
 	}
 	
@@ -221,33 +237,50 @@ Hooks.once("ready", function() {
 		if (ev.repeat || document.activeElement.tagName !== "BODY" || !game.users.filter(a => a.id == game.userId)[0].isGM)
 			return true;
 
+		let start_combat = false;
+		let setting_alt = game.settings.get("quick-combat", "keyalt")
+		if (setting_alt != null) {
+			const keyalt = KeyBinding.parse(setting_alt)
+			if (KeyBinding.eventIsForBinding(ev, keyalt)) {
+				start_combat = true;
+				skipPlaylist = true;
+				console.debug("quick-combat | alt hotkey pressed")
+			}
+		}
 		let setting_key = game.settings.get("quick-combat", "key")
-		if (setting_key != null) {
+		if (setting_key != null && !start_combat) {
 			const key = KeyBinding.parse(setting_key)
 			if (KeyBinding.eventIsForBinding(ev, key)) {
-				ev.preventDefault();
-				ev.stopPropagation();
-				if (game.settings.get("quick-combat", "inCombat")) {
-					let combat = game.combat;
-					if (combat) {
-						combat.endCombat();
-					}
-					else {
-						game.settings.set("quick-combat", "inCombat", false)
-					}
+				start_combat = true;
+				skipPlaylist = false;
+				console.debug("quick-combat | hotkey pressed")
+			}
+		}
+
+		if (start_combat) {
+			console.log("hotkey trigger !!!!", skipPlaylist)
+			ev.preventDefault();
+			ev.stopPropagation();
+			if (game.settings.get("quick-combat", "inCombat")) {
+				let combat = game.combat;
+				if (combat) {
+					combat.endCombat();
 				}
 				else {
-					//check if combat tracker has combatants
-					if(combat.combatants && combat.combatants.length > 0) {
-						game.combat.startCombat();
-					}
-					//check if GM has any selected tokens
-					else if (canvas.tokens.controlled.length === 0) {
-						ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
-					}
-					else {
-						QuickCombat.addCombatants();
-					}
+					game.settings.set("quick-combat", "inCombat", false)
+				}
+			}
+			else {
+				//check if combat tracker has combatants
+				if(combat.combatants && combat.combatants.length > 0) {
+					game.combat.startCombat();
+				}
+				//check if GM has any selected tokens
+				else if (canvas.tokens.controlled.length === 0) {
+					ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+				}
+				else {
+					QuickCombat.addCombatants();
 				}
 			}
 		}
@@ -265,6 +298,7 @@ Hooks.on("preDeleteCombat", (combat, options, userId) => {
 		return true;
 	console.debug("quick-combat | triggering end of combat functions")
 	game.settings.set("quick-combat", "inCombat", false);
+	skipPlaylist = false;
 	if (game.settings.get("quick-combat", "exp")) {
 		QuickCombat.awardExp(combat, userId);
 	}
@@ -279,7 +313,10 @@ Hooks.on("preUpdateCombat", (combat, route, options, userId) => {
 	console.debug("quick-combat | triggering start combat functions")
 	if (!game.settings.get("quick-combat", "inCombat")) {
 		game.settings.set("quick-combat", "inCombat", true);
-		if (game.settings.get("quick-combat", "playlist") != 0) {
+		let playlist = game.settings.get("quick-combat", "playlist")
+		console.log("update combat trigger !!!!", playlist != 0, !skipPlaylist)
+		if (!skipPlaylist && game.settings.get("quick-combat", "playlist") != 0) {
+			console.log("quick-combat | start combat playlist")
 			QuickCombat.startPlaylist();
 		}
 	}
