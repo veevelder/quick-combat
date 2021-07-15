@@ -7,7 +7,7 @@ Adds Auto Experience Tracking. When NPCs are defeated it will add the experience
 
 Other Systems are planned for experience tracking support in the future, as of now DND5E is the only system that is supported. 
 
-Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
+Adds two Hotkeys to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat. The other hotkey will do the same but not start the combat playlist.
 
 This module has been tested with the D&D 5E system. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
 
