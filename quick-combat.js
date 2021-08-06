@@ -83,13 +83,6 @@ class QuickCombat {
 			default: "",
 			type: Object
 		});
-
-		game.settings.register("quick-combat", "inCombat", {
-			scope: "world",
-			config: false,
-			default: false,
-			type: Boolean
-		});
 	}
 
 	static async rollInitiatives(combat) {
@@ -197,13 +190,13 @@ class QuickCombat {
 			playing.stopAll()
 		});
 
-		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
+		var name = game.settings.settings.get("quick-combat", "playlist").choices[game.settings.get("quick-combat", "playlist")]
 		console.debug("quick-combat | starting combat playlist ${name}")
 		game.playlists.getName(name).playAll();
 	}
 	
 	static stopPlaylist() {
-		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
+		var name = game.settings.settings.get("quick-combat", "playlist").choices[game.settings.get("quick-combat", "playlist")]
 		console.debug("quick-combat | stopping combat playlist ${name}")
 		game.playlists.getName(name).stopAll();
 
@@ -258,17 +251,11 @@ Hooks.once("ready", function() {
 		}
 
 		if (start_combat) {
-			console.log("hotkey trigger !!!!", skipPlaylist)
+			console.debug(`quick-combat | skip playlist? ${skipPlaylist}`)
 			ev.preventDefault();
 			ev.stopPropagation();
-			if (game.settings.get("quick-combat", "inCombat")) {
-				let combat = game.combat;
-				if (combat) {
-					combat.endCombat();
-				}
-				else {
-					game.settings.set("quick-combat", "inCombat", false)
-				}
+			if (game.combat != null) {
+				game.combat.endCombat();
 			}
 			else {
 				//check if combat tracker has combatants
@@ -297,7 +284,6 @@ Hooks.on("preDeleteCombat", (combat, options, userId) => {
 	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
 		return true;
 	console.debug("quick-combat | triggering end of combat functions")
-	game.settings.set("quick-combat", "inCombat", false);
 	skipPlaylist = false;
 	if (game.settings.get("quick-combat", "exp")) {
 		QuickCombat.awardExp(combat, userId);
@@ -311,14 +297,10 @@ Hooks.on("preUpdateCombat", (combat, route, options, userId) => {
 	if (!game.users.filter(a => a.id == game.userId)[0].isGM)
 		return true;
 	console.debug("quick-combat | triggering start combat functions")
-	if (!game.settings.get("quick-combat", "inCombat")) {
-		game.settings.set("quick-combat", "inCombat", true);
-		let playlist = game.settings.get("quick-combat", "playlist")
-		console.log("update combat trigger !!!!", playlist != 0, !skipPlaylist)
-		if (!skipPlaylist && game.settings.get("quick-combat", "playlist") != 0) {
-			console.log("quick-combat | start combat playlist")
-			QuickCombat.startPlaylist();
-		}
+	let playlist = game.settings.get("quick-combat", "playlist")
+	if (!skipPlaylist && game.settings.get("quick-combat", "playlist") != 0) {
+		console.log("quick-combat | start combat playlist")
+		QuickCombat.startPlaylist();
 	}
 });
 
