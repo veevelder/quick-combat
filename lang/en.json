@@ -1,6 +1,8 @@
 {
 	"QuickCombat.Playlist" : "Combat Playlist",
 	"QuickCombat.PlaylistHint" : "Select a Playlist to use as Combat Music",
+	"QuickCombat.FanfarePlaylist" : "Fanfare Playlist",
+	"QuickCombat.FanfarePlaylistHint" : "Select a Playlist to use to play a single track at the end of combat, before starting the old playlist",
 	"QuickCombat.Exp" : "Combat Experience Tracking",
 	"QuickCombat.ExpHint" : "Update PCs Experience when ending combat (dnd5e only!)",
 	"QuickCombat.Keybind" : "Combat Toggle Keybind",
