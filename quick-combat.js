@@ -1,7 +1,5 @@
 import {KeyBinding} from '../settings-extender/settings-extender.js'
 
-var skipPlaylist = false;
-
 Hooks.once("ready", function() {
 	//only allow for the GM
 	if (!game.user.isGM)
@@ -19,7 +17,7 @@ Hooks.once("ready", function() {
 			const keyalt = KeyBinding.parse(setting_alt)
 			if (KeyBinding.eventIsForBinding(ev, keyalt)) {
 				start_combat = true;
-				skipPlaylist = true;
+				game.settings.set("quick-combat", "combatPlaylist", null)
 				console.debug("quick-combat | alt hotkey pressed")
 			}
 		}
@@ -28,13 +26,21 @@ Hooks.once("ready", function() {
 			const key = KeyBinding.parse(setting_key)
 			if (KeyBinding.eventIsForBinding(ev, key)) {
 				start_combat = true;
-				//skipPlaylist = false;
-				console.debug("quick-combat | hotkey pressed")
+				game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "playlist"))
+				console.debug("quick-combat | combat hotkey pressed")
+			}
+		}
+		let setting_bosskey = game.settings.get("quick-combat", "bosskey")
+		if (setting_bosskey != null && !start_combat) {
+			const key = KeyBinding.parse(setting_bosskey)
+			if (KeyBinding.eventIsForBinding(ev, key)) {
+				start_combat = true;
+				game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "boss-playlist"))
+				console.debug("quick-combat | boss combat hotkey pressed")
 			}
 		}
 
 		if (start_combat) {
-			console.debug(`quick-combat | skip playlist? ${skipPlaylist}`)
 			ev.preventDefault();
 			ev.stopPropagation();
 			if (game.combat) {
@@ -100,16 +106,15 @@ Hooks.on("ready", () => {
 		return true;
 
 	console.debug("quick-combat | register settings")
+	let playlists = {"None":"None"}
+	game.playlists.contents.map(x => playlists[x.data.name] = x.data.name)
 	// module settings
 	game.settings.register("quick-combat", "playlist", {
 		name: "QuickCombat.Playlist",
 		hint: "QuickCombat.PlaylistHint",
 		scope: "world",
 		config: true,
-		default: 0,
-		isSelect: true,
-		choices: ["None"].concat(game.playlists.contents.map(x => x.data.name)),
-		type: String
+		choices: playlists,
 	});
 
 	game.settings.register("quick-combat", "fanfare-playlist", {
@@ -117,10 +122,15 @@ Hooks.on("ready", () => {
 		hint: "QuickCombat.FanfarePlaylistHint",
 		scope: "world",
 		config: true,
-		default: 0,
-		isSelect: true,
-		choices: ["None"].concat(game.playlists.contents.map(x => x.data.name)),
-		type: String
+		choices: playlists,
+	});
+
+	game.settings.register("quick-combat", "boss-playlist", {
+		name: "QuickCombat.BossPlaylist",
+		hint: "QuickCombat.BossPlaylistHint",
+		scope: "world",
+		config: true,
+		choices: playlists,
 	});
 
 	game.settings.register("quick-combat", "npcroll", {
@@ -174,6 +184,15 @@ Hooks.on("ready", () => {
 		type: KeyBinding,
 	});
 
+	game.settings.register("quick-combat", "bosskey", {
+		name: "QuickCombat.BossKeybind",
+		hint: "QuickCombat.BossKeybindHint",
+		scope: "world",
+		config: true,
+		default: "Shift + Alt + B",
+		type: KeyBinding,
+	});
+
 	game.settings.register("quick-combat", "rmDefeated", {
 		name: "QuickCombat.RemoveDefeated",
 		hint: "QuickCombat.RemoveDefeatedHint",
@@ -189,6 +208,13 @@ Hooks.on("ready", () => {
 		default: "",
 		type: Object
 	});
+
+	game.settings.register("quick-combat", "combatPlaylist", {
+		scope: "world",
+		config: false,
+		default: "",
+		type: Object
+	});
 });
 
 Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
@@ -197,9 +223,8 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 		return true;
 
 	console.debug("quick-combat | triggering start combat functions")
-	let playlist = game.settings.get("quick-combat", "playlist")
-	if (!skipPlaylist && game.settings.get("quick-combat", "playlist") != 0) {
-		console.log("quick-combat | start combat playlist")
+	let playlist = String(game.settings.get("quick-combat", "combatPlaylist"))
+	if (playlist != "None") {
 		var playlists = [];
 		game.playlists.playing.forEach(function(playing) {
 			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
@@ -207,16 +232,13 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 			playing.stopAll()
 		});
 		game.settings.set("quick-combat", "oldPlaylist", playlists)
-
-		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
-		console.debug(`quick-combat | starting combat playlist ${name}`)
-		await game.playlists.getName(name).playAll();
+		console.log(`quick-combat | starting combat playlist ${playlist}`)
+		await game.playlists.getName(playlist).playAll();
 	}
 	else {
 		console.warn("No combat playlist was found, skipping")
 	}
 });
-
 
 Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (!game.user.isGM)
@@ -236,7 +258,6 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		}
 		else {
 			exp = Math.round(exp / pcs.length);
-
 			console.log(`quick-combat | awarding exp ${exp} to PCs`)
 			if (exp != 0 && !isNaN(exp)) {
 				let actor_exp_msg = "<table>";
@@ -251,7 +272,8 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 						})					
 						
 					}
-					actor_exp_msg += "<tr><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
+					console.log("actor", a)
+					actor_exp_msg += "<tr><td><img class='quick-combat-token-selector' id='" + a.token.id + "' src='" + a.img + "' width='50' height='50'></td><td><strong class='quick-combat-token-selector' id='" + a.token.id + "'>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 					a.actor.update({
 						"data.details.xp.value": new_exp
 					});
@@ -278,39 +300,41 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 			}
 		}
 	}
-	//stop combat playlist and play fanfare
-	console.log(skipPlaylist)
-	if (!skipPlaylist && game.settings.get("quick-combat", "playlist") != 0) {
-		//stop combat playlist
-		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
-		console.debug(`quick-combat | stopping combat playlist ${name}`)
-		await game.playlists.getName(name).stopAll();
-
-		//play fanfare playlist
-		if (game.settings.get("quick-combat", "fanfare-playlist") != 0) {
-			var fanfare = game.settings.settings.get("quick-combat.fanfare-playlist").choices[game.settings.get("quick-combat", "fanfare-playlist")]
-			if(fanfare) {
-				console.debug(`quick-combat | starting fanfare playlist ${fanfare}`)
-				var items = Array.from(game.playlists.getName(fanfare).data.sounds);
-				var item = items[Math.floor(Math.random()*items.length)];
-				console.debug(`quick-combat | starting fanfare track ${item.name}`)
-				game.playlists.getName(fanfare).playSound(item);
-			}
-		}
+	//stop all combat playlists and play fanfare
+	let playlists = game.playlists.playing
+	if (playlists) {
+		//stop all combat playlist
+		playlists.forEach(async function(x) { 
+			console.debug(`quick-combat | stopping cmobat playlist ${x.name}`);
+			await x.stopAll();
+		});
+	}
+	//play fanfare playlist
+	var fanfare = String(game.settings.get("quick-combat", "fanfare-playlist"))
+	if (fanfare != "None") {
+		console.debug(`quick-combat | starting fanfare playlist ${fanfare}`)
+		var items = Array.from(game.playlists.getName(fanfare).data.sounds);
+		var item = items[Math.floor(Math.random()*items.length)];
+		console.debug(`quick-combat | starting fanfare track ${item.name}`)
+		game.playlists.getName(fanfare).playSound(item);
 	}
 	//remove defeated npcs
 	if (game.settings.get("quick-combat", "rmDefeated")) {
 		console.debug("quick-combat | removing defeated NPCs")
 		var ids = []
 		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.data.defeated).forEach(function(a) {
-			ids.push(a.token.id)
+			//check if tokens exists first
+			if (game.scenes.current.tokens.has(a.token.id)) {
+				console.debug(`quick-combat | removing defated NPC ${a.token.name}`)
+				ids.push(a.token.id)
+			}
 		});
 		let scene = game.scenes.active;
 		await scene.deleteEmbeddedDocuments("Token", ids)
 	}
 
 	//reset skip playlist
-	skipPlaylist = false;
+	game.settings.set("quick-combat", "combatPlaylist", [])
 });
 
 Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
@@ -322,14 +346,14 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 		return true;
 
 	//if fanfare playlist has been set
-	if (game.settings.get("quick-combat", "fanfare-playlist") != 0) {
-		var fanfare = game.settings.settings.get("quick-combat.fanfare-playlist").choices[game.settings.get("quick-combat", "fanfare-playlist")]
+	var fanfare = String(game.settings.get("quick-combat", "fanfare-playlist"))
+	if (fanfare != "None") {
 		if (playlist.data.name != fanfare)
 			return true;
 	}
 	//otherwise check if combat playlist has stopped
 	else {
-		var name = game.settings.settings.get("quick-combat.playlist").choices[game.settings.get("quick-combat", "playlist")]
+		var name = String(game.settings.get("quick-combat", "combatPlaylist"))
 		if (playlist.data.name != name)
 			return true;
 	}
@@ -338,10 +362,21 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	console.debug("quick-combat | starting old playlist")
 	//start old playlist
 	var playlists = game.settings.get("quick-combat", "oldPlaylist");
-	console.debug(`quick-combat | starting old playlist ${playlists}`)
-	playlists.forEach(function(playlist) {
-		game.playlists.getName(playlist).playAll();
-	})
-	game.settings.set("quick-combat", "oldPlaylist", [])
+	if (playlists) {
+		playlists.forEach(function(playlist) {
+			console.debug(`quick-combat | starting old playlist ${playlists.name}`)
+			game.playlists.getName(playlist).playAll();
+		})
+	}
+	game.settings.set("quick-combat", "oldPlaylist", null)
 });
 
+Hooks.on("renderChatMessage", (message, html, data) => {
+	let ids = html.find(".quick-combat-token-selector")
+	ids.click(function(event) {
+		event.preventDefault();
+		if (!canvas?.scene?.data.active) return;
+		const token = canvas.tokens?.get(event.currentTarget.id);
+		token?.control({ multiSelect: false, releaseOthers: true });
+	})
+})

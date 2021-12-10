@@ -19,6 +19,7 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 
 * **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
 * **Fanfare Playlist** - select from a list of playlists to play when combat ends, will randomly select a track to play.
+* **Boss Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist. This is seperate from the Combat Playlist.
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives.
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
