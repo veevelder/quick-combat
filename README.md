@@ -31,7 +31,7 @@ With the new keybind capabilities built into Foundry Quick Combat no longer requ
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
 * ~~**Combat Toggle Keybind** - Keybind combination to start and stop combat.~~ Its not located in the Configure Controls Settings Menu, Under Quick Hits.
-* ~~**Combat Toggle Keybind WITHOUT playlist** - Keybind combination to start and stop combat, but will not start the Combat Playlist or Fanfare Playlist.~~ Not longer exists do to Playlist Selection Window
+* ~~**Combat Toggle Keybind WITHOUT playlist** - Keybind combination to start and stop combat, but will not start the Combat Playlist or Fanfare Playlist.~~ Not longer exists due to Playlist Selection Window
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
 
 ### Keybind Settings
@@ -98,3 +98,13 @@ If set up will only roll for NPC combatants and not PCs.
 
 ![Quick Combat NPC Rolls](images/npc-roll.png)
 
+### Remove Defeated
+![Remove Defeated Settings](images/settings-remove-defeated.png)
+
+Remove any of the defeated NPC combatants tokens from the Scene.
+
+![Remove Defeated Before](images/removed-defeated-before.png)
+Before
+
+![Remove Defeated After](images/removed-defeated-after.png)
+After
