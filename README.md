@@ -38,6 +38,9 @@ With the new keybind capabilities built into Foundry Quick Combat no longer requ
 
 ![Quick Combat Settings](images/settings-keybind.png)
 
+Under the Configure Control Settings Menu is located a **Quick Combat** Action Category. Where the Combat Toggle Keybind setting is now located. This can be changed as before.
+
+**NOTE** Due to the way this Foundry setting works I had to change the default keybind from `Shift + C` to `Alt + C`.
 
 ### Start Combat
 ![Quick Combat Tokens Selected](images/tokens-selected.png)
