@@ -1,110 +1,123 @@
-import {KeyBinding} from '../settings-extender/settings-extender.js'
-
-Hooks.once("ready", function() {
-	//only allow for the GM
-	if (!game.user.isGM)
-		return true;
-
-	console.debug("quick-combat | initializing")
-	window.addEventListener("keydown", async ev => {
-		//only allow for non repeat keys on the body by the GM
-		if (ev.repeat || document.activeElement.tagName !== "BODY" || !game.users.filter(a => a.id == game.userId)[0].isGM)
-			return true;
-
-		let start_combat = false;
-		let setting_alt = game.settings.get("quick-combat", "keyalt")
-		if (setting_alt != null) {
-			const keyalt = KeyBinding.parse(setting_alt)
-			if (KeyBinding.eventIsForBinding(ev, keyalt)) {
-				start_combat = true;
-				game.settings.set("quick-combat", "combatPlaylist", null)
-				console.debug("quick-combat | alt hotkey pressed")
+async function quickcombat() {
+	console.debug("quick-combat | starting combat")
+	//check if combat tracker has combatants
+	if(game.combat && game.combat.combatants.length > 0) {
+		game.combat.startCombat();
+	}
+	//check if GM has any selected tokens
+	else if (canvas.tokens.controlled.length === 0) {
+		ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+	}
+	else {
+		// Reference the combat encounter displayed in the Sidebar if none was provided
+		var combat = ui.combat.combat;
+		if ( !combat ) {
+			if ( game.user.isGM ) {
+				console.debug("quick-combat | creating new combat")
+				combat = await game.combats.documentClass.create({scene: canvas.scene.id, active: true});
+			}
+			else {
+				return ui.notifications.warn(game.i18n.localize("COMBAT.NoneActive"));
 			}
 		}
-		let setting_key = game.settings.get("quick-combat", "key")
-		if (setting_key != null && !start_combat) {
-			const key = KeyBinding.parse(setting_key)
-			if (KeyBinding.eventIsForBinding(ev, key)) {
-				start_combat = true;
-				game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "playlist"))
-				console.debug("quick-combat | combat hotkey pressed")
-			}
-		}
-		let setting_bosskey = game.settings.get("quick-combat", "bosskey")
-		if (setting_bosskey != null && !start_combat) {
-			const key = KeyBinding.parse(setting_bosskey)
-			if (KeyBinding.eventIsForBinding(ev, key)) {
-				start_combat = true;
-				game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "boss-playlist"))
-				console.debug("quick-combat | boss combat hotkey pressed")
-			}
+		else {
+			combat = game.combat;
 		}
 
-		if (start_combat) {
-			ev.preventDefault();
-			ev.stopPropagation();
+		console.debug("quick-combat | getting player tokens skipping Pets")
+		var tokens = canvas.tokens.controlled.filter(t => t.inCombat === false).filter(function(token) {
+			if (token.actor.data.items.filter(c => c.name == "Pet").length == 0) {
+				return token
+			}
+		});
+		
+		// Process each controlled token, as well as the reference token
+		const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.data.hidden}});
+		console.debug("quick-combat | adding combatants to combat")
+		await combat.createEmbeddedDocuments("Combatant", createData)
+		console.log("quick-combat | rolling initiatives for NPCs")
+		await combat.rollNPC()
+		//check for PC roll option
+		if (game.settings.get("quick-combat", "npcroll")) {
+			return;
+		}
+		console.log("quick-combat | rolling initiatives for PCs")
+		//roll all PCs that haven't rolled initiative yet
+		await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
+		console.log("quick-combat | starting combat")
+		await combat.startCombat();
+	}
+}
+
+Hooks.on("init", () => {
+	console.debug("quick-combat | register keybind settings")
+	game.keybindings.register("quick-combat", "key", {
+		name: "QuickCombat.Keybind",
+		hint: "QuickCombat.KeybindHint",
+		editable: [
+			{
+				key: "C",
+				modifiers: ["Alt"]
+			}
+		],
+		onDown: () => {
+			console.debug("quick-combat | combat hotkey pressed")
 			if (game.combat) {
 				console.debug("quick-combat | combat found stopping combat")
 				game.combat.endCombat();
 			}
 			else {
-				console.debug("quick-combat | no combat found starting combat")
-				//check if combat tracker has combatants
-				if(game.combat && game.combat.combatants.length > 0) {
-					game.combat.startCombat();
-				}
-				//check if GM has any selected tokens
-				else if (canvas.tokens.controlled.length === 0) {
-					ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
-				}
-				else {
-					// Reference the combat encounter displayed in the Sidebar if none was provided
-					var combat = ui.combat.combat;
-					if ( !combat ) {
-						if ( game.user.isGM ) {
-							console.debug("quick-combat | creating new combat")
-							combat = await game.combats.documentClass.create({scene: canvas.scene.id, active: true});
-						}
-						else {
-							return ui.notifications.warn(game.i18n.localize("COMBAT.NoneActive"));
-						}
+				var buttons = {
+					button1: {
+						label: game.i18n.localize("QuickCombat.CombatButton"),
+						callback: () => {
+							console.debug("quick-combat | setting combat playlist to start")
+							game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "playlist"))
+							quickcombat()
+						},
+						icon: `<i class="fas fa-music"></i>`
+					},
+					button2: {
+						label: game.i18n.localize("QuickCombat.NoneButton"),
+						callback: () => {
+							console.debug("quick-combat | setting no playlist to start")
+							game.settings.set("quick-combat", "combatPlaylist", null)
+							quickcombat()
+							
+						},
+						icon: `<i class="fas fa-volume-mute"></i>`
 					}
-					else {
-						combat = game.combat;
-					}
+				}
 
-					console.debug("quick-combat | getting player tokens skipping Pets")
-					var tokens = canvas.tokens.controlled.filter(t => t.inCombat === false).filter(function(token) {
-						if (token.actor.data.items.filter(c => c.name == "Pet").length == 0) {
-							return token
-						}
-					});
-					
-					// Process each controlled token, as well as the reference token
-					const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.data.hidden}});
-					console.debug("quick-combat | adding combatants to combat")
-					await combat.createEmbeddedDocuments("Combatant", createData)
-					console.log("quick-combat | rolling initiatives for NPCs")
-					await combat.rollNPC()
-					//check for PC roll option
-					if (game.settings.get("quick-combat", "npcroll")) {
-						return;
+				//check if boss playlist has been set if so add button otherwise dont
+				let playlist_obj = game.settings.get("quick-combat", "boss-playlist")
+				let playlist = String(playlist_obj)
+				if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && playlist != "None") {
+					buttons.button3 = {
+						label: game.i18n.localize("QuickCombat.BossButton"),
+						callback: () => {
+							console.debug("quick-combat | setting boss playlist to start")
+							game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "boss-playlist"))
+							quickcombat()
+		
+						},
+						icon: `<i class="fas fa-skull-crossbones"></i>`
 					}
-					console.log("quick-combat | rolling initiatives for PCs")
-					//roll all PCs that haven't rolled initiative yet
-					await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
-					console.log("quick-combat | starting combat")
-					await combat.startCombat();
 				}
+
+				new Dialog({
+					title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
+					content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
+					buttons: buttons
+				}).render(true);
 			}
-		}
+		},
+		restricted: true, //gmonly
+		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
 });
 
 Hooks.on("ready", () => {
-	if (!game.user.isGM)
-		return true;
-
 	console.debug("quick-combat | register settings")
 	let playlists = {"None":"None"}
 	game.playlists.contents.map(x => playlists[x.data.name] = x.data.name)
@@ -166,33 +179,6 @@ Hooks.on("ready", () => {
 		type: Boolean
 	});
 
-	game.settings.register("quick-combat", "key", {
-		name: "QuickCombat.Keybind",
-		hint: "QuickCombat.KeybindHint",
-		scope: "world",
-		config: true,
-		default: "Shift + C",
-		type: KeyBinding,
-	});
-
-	game.settings.register("quick-combat", "keyalt", {
-		name: "QuickCombat.KeybindAlt",
-		hint: "QuickCombat.KeybindAltHint",
-		scope: "world",
-		config: true,
-		default: "Shift + Alt + C",
-		type: KeyBinding,
-	});
-
-	game.settings.register("quick-combat", "bosskey", {
-		name: "QuickCombat.BossKeybind",
-		hint: "QuickCombat.BossKeybindHint",
-		scope: "world",
-		config: true,
-		default: "Shift + Alt + B",
-		type: KeyBinding,
-	});
-
 	game.settings.register("quick-combat", "rmDefeated", {
 		name: "QuickCombat.RemoveDefeated",
 		hint: "QuickCombat.RemoveDefeatedHint",
@@ -223,20 +209,26 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 		return true;
 
 	console.debug("quick-combat | triggering start combat functions")
-	let playlist = String(game.settings.get("quick-combat", "combatPlaylist"))
-	if (playlist != "None") {
-		var playlists = [];
-		game.playlists.playing.forEach(function(playing) {
+	let playlist_obj = game.settings.get("quick-combat", "combatPlaylist")
+	let playlist = String(playlist_obj)
+	let skip = true
+	let playlists = []
+	if ((playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) || playlist == "None") {
+		console.warn("No combat playlist was found, skipping")
+		skip = false;
+	}
+	game.playlists.playing.forEach(function(playing) {
+		playlists.push(playing.name)
+		if(skip) {
 			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
-			playlists.push(playing.name)
 			playing.stopAll()
-		});
-		game.settings.set("quick-combat", "oldPlaylist", playlists)
+		}
+	});
+	console.log("playlists", playlists)
+	game.settings.set("quick-combat", "oldPlaylist", playlists)
+	if (skip) {
 		console.log(`quick-combat | starting combat playlist ${playlist}`)
 		await game.playlists.getName(playlist).playAll();
-	}
-	else {
-		console.warn("No combat playlist was found, skipping")
 	}
 });
 
@@ -272,7 +264,6 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 						})					
 						
 					}
-					console.log("actor", a)
 					actor_exp_msg += "<tr><td><img class='quick-combat-token-selector' id='" + a.token.id + "' src='" + a.img + "' width='50' height='50'></td><td><strong class='quick-combat-token-selector' id='" + a.token.id + "'>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 					a.actor.update({
 						"data.details.xp.value": new_exp
@@ -300,18 +291,20 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 			}
 		}
 	}
+
 	//stop all combat playlists and play fanfare
 	let playlists = game.playlists.playing
 	if (playlists) {
 		//stop all combat playlist
 		playlists.forEach(async function(x) { 
-			console.debug(`quick-combat | stopping cmobat playlist ${x.name}`);
+			console.debug(`quick-combat | stopping combat playlist ${x.name}`);
 			await x.stopAll();
 		});
 	}
-	//play fanfare playlist
-	var fanfare = String(game.settings.get("quick-combat", "fanfare-playlist"))
-	if (fanfare != "None") {
+	//play fanfare playlist if set
+	let playlist_obj = game.settings.get("quick-combat", "fanfare-playlist");
+	var fanfare = String(playlist_obj)
+	if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && fanfare != "None") {
 		console.debug(`quick-combat | starting fanfare playlist ${fanfare}`)
 		var items = Array.from(game.playlists.getName(fanfare).data.sounds);
 		var item = items[Math.floor(Math.random()*items.length)];
@@ -325,16 +318,13 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.data.defeated).forEach(function(a) {
 			//check if tokens exists first
 			if (game.scenes.current.tokens.has(a.token.id)) {
-				console.debug(`quick-combat | removing defated NPC ${a.token.name}`)
+				console.debug(`quick-combat | removing defeated NPC ${a.token.name}`)
 				ids.push(a.token.id)
 			}
 		});
 		let scene = game.scenes.active;
 		await scene.deleteEmbeddedDocuments("Token", ids)
 	}
-
-	//reset skip playlist
-	game.settings.set("quick-combat", "combatPlaylist", [])
 });
 
 Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
@@ -344,30 +334,37 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	//dont do anything if the update is set to playing
 	if (update.playing)
 		return true;
-
 	//if fanfare playlist has been set
-	var fanfare = String(game.settings.get("quick-combat", "fanfare-playlist"))
-	if (fanfare != "None") {
+	let playlist_obj = game.settings.get("quick-combat", "fanfare-playlist");
+	var fanfare = String(playlist_obj)
+	if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && fanfare != "None") {
 		if (playlist.data.name != fanfare)
 			return true;
 	}
 	//otherwise check if combat playlist has stopped
 	else {
-		var name = String(game.settings.get("quick-combat", "combatPlaylist"))
-		if (playlist.data.name != name)
+		playlist_obj = game.settings.get("quick-combat", "combatPlaylist")
+		var name = String(playlist_obj)
+		if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && name != playlist.data.name) {
 			return true;
+		}
 	}
 	
+	//reset skip playlist
+	game.settings.set("quick-combat", "combatPlaylist", null)
 
 	console.debug("quick-combat | starting old playlist")
 	//start old playlist
-	var playlists = game.settings.get("quick-combat", "oldPlaylist");
-	if (playlists) {
-		playlists.forEach(function(playlist) {
-			console.debug(`quick-combat | starting old playlist ${playlists.name}`)
-			game.playlists.getName(playlist).playAll();
-		})
+	let playlists = game.settings.get("quick-combat", "oldPlaylist");
+	if (playlists && Object.keys(playlists).length === 0 && Object.getPrototypeOf(playlists) === Object.prototype) {
+		console.warn("no old playlists found, skipping")
+		return true;
 	}
+	//start old playlists
+	playlists.forEach(function(playlist) {
+		console.debug(`quick-combat | starting old playlist ${playlists.name}`)
+		game.playlists.getName(playlist).playAll();
+	})
 	game.settings.set("quick-combat", "oldPlaylist", null)
 });
 

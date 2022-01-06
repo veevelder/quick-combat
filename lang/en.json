@@ -4,15 +4,11 @@
 	"QuickCombat.FanfarePlaylist" : "Fanfare Playlist",
 	"QuickCombat.FanfarePlaylistHint" : "Select a Playlist to use to play a single track at the end of combat, before starting the old playlist",
 	"QuickCombat.BossPlaylist" : "Boss Playlist",
-	"QuickCombat.BossPlaylistHint" : "Select a Playlist to use as Boss Combat Music seperate from Combat Playlist",
+	"QuickCombat.BossPlaylistHint" : "Select a Playlist to use as Boss Combat Music separate from Combat Playlist",
 	"QuickCombat.Exp" : "Combat Experience Tracking",
 	"QuickCombat.ExpHint" : "Update PCs Experience when ending combat (dnd5e only!)",
 	"QuickCombat.Keybind" : "Combat Toggle Keybind",
 	"QuickCombat.KeybindHint" : "When selecting tokens on a scene it will start combat and start Combat Playlist, otherwise it will end it and start previous playlist",
-	"QuickCombat.KeybindAlt" : "Combat Toggle Keybind WITHOUT playlist",
-	"QuickCombat.KeybindAltHint" : "When selecting tokens on a scene it will start combat WITHOUT starting the combat playlist, otherwise it will end it",
-	"QuickCombat.BossKeybind" : "Boss Combat Toggle Keybind",
-	"QuickCombat.BossKeybindHint" : "When selecting tokens on a scene it will start combat and start Boss Combat Playlist, otherwise it will end it and start previous playlist",
 	"QuickCombat.LevelUp": "LEVEL UP!",
 	"QuickCombat.ExperienceMessageStart": "For defeating",
 	"QuickCombat.ExperienceMessageMid": "each of you get",
@@ -24,5 +20,10 @@
 	"QuickCombat.ExpGMHint": "Send the Experience Message only to the GM.",
 	"QuickCombat.RemoveDefeated": "Remove Defeated NPCs?",
 	"QuickCombat.RemoveDefeatedHint": "Will remove all defeated NPCs tokens that were in combat from the scene.",
-	"QuickCombat.noPlayerError": "No actors in combat had a player, cannot calculate experience!"
+	"QuickCombat.noPlayerError": "No actors in combat had a player, cannot calculate experience!",
+	"QuickCombat.PlaylistWindowTitle": "Start Playlist",
+	"QuickCombat.PlaylistWindowDescription": "Select an option to start the combat playlist",
+	"QuickCombat.CombatButton": "Combat",
+	"QuickCombat.BossButton": "Boss",
+	"QuickCombat.NoneButton": "None"
 }

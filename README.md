@@ -17,18 +17,27 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 
 ## How To Use Quick Combat
 
+### FoundryVTT Version 9 Updates
+With the new keybind capabilities built into Foundry Quick Combat no longer requires any dependencies, and some of the settings have moved/changed as noted below. The same basic functionality still exists.
+
 ### Settings
+
 ![Quick Combat Settings](images/settings.png)
 
 * **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
 * **Fanfare Playlist** - select from a list of playlists to play when combat ends, will randomly select a track to play.
-* **Boss Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist. This is seperate from the Combat Playlist.
+* **Boss Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist. This is separate from the Combat Playlist.
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives.
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
-* **Combat Toggle Keybind** - Keybind combination to start and stop combat.
-* **Combat Toggle Keybind WITHOUT playlist** - Keybind combination to start and stop combat, but will not start the Combat Playlist or Fanfare Playlist.
+* ~~**Combat Toggle Keybind** - Keybind combination to start and stop combat.~~ Its not located in the Configure Controls Settings Menu, Under Quick Hits.
+* ~~**Combat Toggle Keybind WITHOUT playlist** - Keybind combination to start and stop combat, but will not start the Combat Playlist or Fanfare Playlist.~~ Not longer exists do to Playlist Selection Window
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
+
+### Keybind Settings
+
+![Quick Combat Settings](images/settings-keybind.png)
+
 
 ### Start Combat
 ![Quick Combat Tokens Selected](images/tokens-selected.png)
@@ -36,6 +45,16 @@ This module has been tested with the D&D 5E system. Plan is to make it available
 Select all tokens for combat.
 
 Hit the Combat Toggle Keybind hot key.
+
+**New in Version 0.2.6** A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
+
+![Quick Combat Playlist With Boss](images/start-playlist-window-withboss.png)
+
+If you have set a boss playlist in the settings the option will appear.
+
+![Quick Combat Playlist With Boss](images/start-playlist-window-withoutboss.png)
+
+If no boss playlist has been set in the settings the boss playlist option will not appear.
 
 ![Quick Combat Start](images/combat-start.png)
 
@@ -46,7 +65,7 @@ Adds all selected tokens to combat tracker, rolls all tokens initiatives, starts
 
 Hit the Combat Toggle Keybind hot key, a warning will pop up to make sure it wasn't an accident.
 
-Will remove all combatants, and if experience tracking was enabled will find all defeated NPCs, calcuate experience and display a chat box with all PCs experience.
+Will remove all combatants, and if experience tracking was enabled will find all defeated NPCs, calculate experience and display a chat box with all PCs experience.
 
 ![Quick End Experience](images/experience-tracking.png)
 
