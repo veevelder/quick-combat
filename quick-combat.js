@@ -1,3 +1,17 @@
+function get_playlist(playlist_name) {
+	let playlist_obj = game.settings.get("quick-combat", playlist_name)
+	console.debug(`quick-combat | getting playlist: ${playlist_name} ${playlist_obj}`)
+	if(Object.prototype.toString.call(playlist_obj) === '[object Array]') {
+		//an array of playlists
+		return playlist_obj
+	}
+	if(!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype)) {
+		//playlist object make it a string
+		return String(playlist_obj)
+	}
+	return "None"
+}
+
 async function quickcombat() {
 	console.debug("quick-combat | starting combat")
 	//check if combat tracker has combatants
@@ -67,49 +81,7 @@ Hooks.on("init", () => {
 				game.combat.endCombat();
 			}
 			else {
-				var buttons = {
-					button1: {
-						label: game.i18n.localize("QuickCombat.CombatButton"),
-						callback: () => {
-							console.debug("quick-combat | setting combat playlist to start")
-							game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "playlist"))
-							quickcombat()
-						},
-						icon: `<i class="fas fa-music"></i>`
-					},
-					button2: {
-						label: game.i18n.localize("QuickCombat.NoneButton"),
-						callback: () => {
-							console.debug("quick-combat | setting no playlist to start")
-							game.settings.set("quick-combat", "combatPlaylist", null)
-							quickcombat()
-							
-						},
-						icon: `<i class="fas fa-volume-mute"></i>`
-					}
-				}
-
-				//check if boss playlist has been set if so add button otherwise dont
-				let playlist_obj = game.settings.get("quick-combat", "boss-playlist")
-				let playlist = String(playlist_obj)
-				if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && playlist != "None") {
-					buttons.button3 = {
-						label: game.i18n.localize("QuickCombat.BossButton"),
-						callback: () => {
-							console.debug("quick-combat | setting boss playlist to start")
-							game.settings.set("quick-combat", "combatPlaylist", game.settings.get("quick-combat", "boss-playlist"))
-							quickcombat()
-		
-						},
-						icon: `<i class="fas fa-skull-crossbones"></i>`
-					}
-				}
-
-				new Dialog({
-					title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
-					content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
-					buttons: buttons
-				}).render(true);
+				quickcombat()
 			}
 		},
 		restricted: true, //gmonly
@@ -207,29 +179,80 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 	const combatStart = combat.round === 0 && update.round === 1;
 	if (!game.user.isGM || !combatStart)
 		return true;
-
+	
 	console.debug("quick-combat | triggering start combat functions")
-	let playlist_obj = game.settings.get("quick-combat", "combatPlaylist")
-	let playlist = String(playlist_obj)
-	let skip = true
-	let playlists = []
-	if ((playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) || playlist == "None") {
-		console.warn("No combat playlist was found, skipping")
-		skip = false;
-	}
-	game.playlists.playing.forEach(function(playing) {
-		playlists.push(playing.name)
-		if(skip) {
-			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
-			playing.stopAll()
+
+	var buttons = {
+		button1: {
+			label: game.i18n.localize("QuickCombat.CombatButton"),
+			callback: async function() {
+				console.debug("quick-combat | setting combat playlist to start")
+				let playlists = []
+				game.playlists.playing.forEach(function(playing) {
+					playlists.push(playing.name)
+					console.debug(`quick-combat | stopping old playlist ${playing.name}`)
+					playing.stopAll()
+				});
+				game.settings.set("quick-combat", "oldPlaylist", playlists)
+				let playlist = get_playlist("playlist")
+				if (playlist != "None") {
+					game.settings.set("quick-combat", "combatPlaylist", playlist)
+					console.log(`quick-combat | starting combat playlist ${playlist}`)
+					await game.playlists.getName(playlist).playAll();
+				}
+				else {
+					console.warn("quick-combat | no combat playlist defined, skipping")
+				}
+			},
+			icon: `<i class="fas fa-music"></i>`
+		},
+		button2: {
+			label: game.i18n.localize("QuickCombat.NoneButton"),
+			callback: () => {
+				console.debug("quick-combat | setting no playlist to start")
+				game.settings.set("quick-combat", "combatPlaylist", null)
+				let playlists = []
+				game.playlists.playing.forEach(function(playing) {
+					playlists.push(playing.name)
+				});
+				game.settings.set("quick-combat", "oldPlaylist", playlists)
+			},
+			icon: `<i class="fas fa-volume-mute"></i>`
 		}
-	});
-	console.log("playlists", playlists)
-	game.settings.set("quick-combat", "oldPlaylist", playlists)
-	if (skip) {
-		console.log(`quick-combat | starting combat playlist ${playlist}`)
-		await game.playlists.getName(playlist).playAll();
 	}
+
+	//check if boss playlist has been set if so add button otherwise dont	
+	let playlist = get_playlist("boss-playlist")
+	if (playlist != "None") {
+		buttons.button3 = {
+			label: game.i18n.localize("QuickCombat.BossButton"),
+			callback: async function() {
+				console.debug("quick-combat | setting boss playlist to start")
+				let playlists = []
+				game.playlists.playing.forEach(function(playing) {
+					playlists.push(playing.name)
+					console.debug(`quick-combat | stopping old playlist ${playing.name}`)
+					playing.stopAll()
+				});
+				game.settings.set("quick-combat", "oldPlaylist", playlists)
+				if (playlist != "None") {
+					game.settings.set("quick-combat", "combatPlaylist", playlist)
+					console.log(`quick-combat | starting combat playlist ${playlist}`)
+					await game.playlists.getName(playlist).playAll();
+				}
+				else {
+					console.warn("quick-combat | no combat playlist defined, skipping")
+				}
+			},
+			icon: `<i class="fas fa-skull-crossbones"></i>`
+		}
+	}
+
+	new Dialog({
+		title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
+		content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
+		buttons: buttons
+	}).render(true);
 });
 
 Hooks.on("deleteCombat", async (combat, options, userId) => {
@@ -302,9 +325,8 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		});
 	}
 	//play fanfare playlist if set
-	let playlist_obj = game.settings.get("quick-combat", "fanfare-playlist");
-	var fanfare = String(playlist_obj)
-	if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && fanfare != "None") {
+	let fanfare = get_playlist("fanfare-playlist")
+	if (fanfare != "None") {
 		console.debug(`quick-combat | starting fanfare playlist ${fanfare}`)
 		var items = Array.from(game.playlists.getName(fanfare).data.sounds);
 		var item = items[Math.floor(Math.random()*items.length)];
@@ -335,17 +357,15 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	if (update.playing)
 		return true;
 	//if fanfare playlist has been set
-	let playlist_obj = game.settings.get("quick-combat", "fanfare-playlist");
-	var fanfare = String(playlist_obj)
-	if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && fanfare != "None") {
+	let fanfare = get_playlist("fanfare-playlist")
+	if (fanfare != "None") {
 		if (playlist.data.name != fanfare)
 			return true;
 	}
 	//otherwise check if combat playlist has stopped
 	else {
-		playlist_obj = game.settings.get("quick-combat", "combatPlaylist")
-		var name = String(playlist_obj)
-		if (!(playlist_obj && Object.keys(playlist_obj).length === 0 && Object.getPrototypeOf(playlist_obj) === Object.prototype) && name != playlist.data.name) {
+		let name = get_playlist("combatPlaylist")
+		if (name != playlist.data.name) {
 			return true;
 		}
 	}
@@ -355,8 +375,8 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 
 	console.debug("quick-combat | starting old playlist")
 	//start old playlist
-	let playlists = game.settings.get("quick-combat", "oldPlaylist");
-	if (playlists && Object.keys(playlists).length === 0 && Object.getPrototypeOf(playlists) === Object.prototype) {
+	let playlists = get_playlist("oldPlaylist")
+	if (playlists == "None") {
 		console.warn("no old playlists found, skipping")
 		return true;
 	}
