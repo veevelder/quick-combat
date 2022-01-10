@@ -5,6 +5,8 @@
 	"QuickCombat.FanfarePlaylistHint" : "Select a Playlist to use to play a single track at the end of combat, before starting the old playlist",
 	"QuickCombat.BossPlaylist" : "Boss Playlist",
 	"QuickCombat.BossPlaylistHint" : "Select a Playlist to use as Boss Combat Music separate from Combat Playlist",
+	"QuickCombat.ChoosePlaylist" : "Choose Playlist",
+	"QuickCombat.ChoosePlaylistHint" : "Display a popup when starting combat to determine which playlist to start, Combat, Boss, or None. If disabled will always start Combat playlist if set.",
 	"QuickCombat.Exp" : "Combat Experience Tracking",
 	"QuickCombat.ExpHint" : "Update PCs Experience when ending combat (dnd5e only!)",
 	"QuickCombat.Keybind" : "Combat Toggle Keybind",
