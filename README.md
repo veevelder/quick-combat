@@ -6,14 +6,16 @@ With the update of version 0.2.5 of quick hits it will remove your old saved pla
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
 
-Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs. Will only work on DND5E other systems this setting is not available.
-
-Other Systems are planned for experience tracking support in the future, as of now DND5E is the only system that is supported. 
+Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs.
 
 Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
 
-This module has been tested with the D&D 5E system. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
 
+## Current Game System Support
+This module has been tested with the systems listed below. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
+
+* [D&D 5e](https://gitlab.com/foundrynet/dnd5e)
+* [OSE](https://github.com/vttred/ose)
 
 ## How To Use Quick Combat
 
@@ -27,7 +29,7 @@ With the new keybind capabilities built into Foundry Quick Combat no longer requ
 * **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
 * **Fanfare Playlist** - select from a list of playlists to play when combat ends, will randomly select a track to play.
 * **Boss Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist. This is separate from the Combat Playlist.
-* **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives.
+* **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives. Doesn't do anything for the OSE system.
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
 * ~~**Combat Toggle Keybind** - Keybind combination to start and stop combat.~~ Its not located in the Configure Controls Settings Menu, Under Quick Hits.
@@ -49,7 +51,7 @@ Select all tokens for combat.
 
 Hit the Combat Toggle Keybind hot key.
 
-**New in Version 0.2.6** A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
+**New in Version 0.2.6** If enabled: A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
 
 ![Quick Combat Playlist With Boss](images/start-playlist-window-withboss.png)
 
