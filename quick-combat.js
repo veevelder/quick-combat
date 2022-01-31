@@ -70,13 +70,12 @@ Hooks.on("init", () => {
 						console.log("quick-combat | rolling initiatives for PCs")
 						//roll all PCs that haven't rolled initiative yet
 						await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
+						console.log("quick-combat | starting combat")
+						await combat.startCombat();
 					}
 					else if (CONFIG.hasOwnProperty("OSE")) {
-						//click reroll button and have the system handle rolling
-						$('.combat-control[data-control="reroll"]').click()
+						console.debug("quick-combat | skipping combat rolling for OSE")
 					}
-					console.log("quick-combat | starting combat")
-					await combat.startCombat();
 				}
 			}
 		},
@@ -119,19 +118,21 @@ Hooks.on("ready", () => {
 		default: false,
 		type: Boolean
 	});
-	game.settings.register("quick-combat", "npcroll", {
-		name: "QuickCombat.NPCRoll",
-		hint: "QuickCombat.NPCRollHint",
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean
-	});
 	var def = false;
 	var conf = false;
 	if (CONFIG.hasOwnProperty("DND5E") || CONFIG.hasOwnProperty("OSE")) {
 		def = true;
 		conf = true;
+	}
+	if (!CONFIG.hasOwnProperty("OSE")) {
+		game.settings.register("quick-combat", "npcroll", {
+			name: "QuickCombat.NPCRoll",
+			hint: "QuickCombat.NPCRollHint",
+			scope: "world",
+			config: true,
+			default: false,
+			type: Boolean
+		});
 	}
 	game.settings.register("quick-combat", "exp", {
 		name: "QuickCombat.Exp",
