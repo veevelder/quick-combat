@@ -1,12 +1,31 @@
 {
 	"name": "quick-combat",
+	"compatibleCoreVersion": "9",
+
+	"id": "quick-combat",
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and adds Experience to PCs after combat.",
-	"version": "0.3.0",
-	"author": "veevelder",
-	"minimumCoreVersion": "9",
-  	"compatibleCoreVersion": "9",
-	"esmodules": ["quick-combat.js"],
+	"version": "This is auto replaced",
+	"library": "false",
+	"manifestPlusVersion": "1.2.0",
+	"compatibility": {
+		"minimum": 9,
+		"verified": 9,
+		"maximum": 9
+	},
+	"authors": [
+	  {
+		"name": "lostix",
+		"url": "https://github.com/veevelder/quick-combat"
+	  }
+	],
+	"relationships": {
+		"systems": [],
+		"requires": []
+	},
+	"esmodules": ["scripts/quick-combat.js"],
+	"scripts": [],
+	"styles": [],
 	"languages": [
 		{
 			"lang": "en",
@@ -14,10 +33,10 @@
 			"path": "lang/en.json"
 		}
 	],
-	"url" : "https://github.com/veevelder/quick-combat",
-	"download" : "https://github.com/veevelder/quick-combat/releases/download/0.3.0/quick-combat.zip",
-	"manifest" : "https://raw.githubusercontent.com/veevelder/quick-combat/main/module.json",
-	"license": "https://github.com/veevelder/quick-combat/blob/main/LICENSE",
-	"readme": "https://github.com/veevelder/quick-combat/blob/main/README.md",
-	"dependencies": []
+	"url": "This is auto replaced",
+	"manifest": "This is auto replaced",
+	"download": "This is auto replaced",
+	"license": "LICENSE",
+	"readme": "README.md"
 }
+  
