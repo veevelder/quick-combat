@@ -1,7 +1,4 @@
 {
-	"name": "quick-combat",
-	"compatibleCoreVersion": "9",
-
 	"id": "quick-combat",
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and adds Experience to PCs after combat.",
@@ -10,8 +7,8 @@
 	"manifestPlusVersion": "1.2.0",
 	"compatibility": {
 		"minimum": 9,
-		"verified": 9,
-		"maximum": 9
+		"verified": 10,
+		"maximum": 10
 	},
 	"authors": [
 	  {
@@ -31,6 +28,24 @@
 			"lang": "en",
 			"name": "English",
 			"path": "lang/en.json"
+		}
+	],
+	"packs": [
+		{
+			"name": "quick-combat-features",
+			"label": "Quick Combat Features",
+			"system": "dnd5e",
+			"path": "./packs/quick-combat-features.db",
+			"module": "quick-combat",
+			"type": "Item"
+		},		
+		{
+			"name": "quick-combat-features",
+			"label": "Quick Combat Features",
+			"system": "ose",
+			"path": "./packs/quick-combat-features.db",
+			"module": "quick-combat",
+			"type": "Item"
 		}
 	],
 	"url": "This is auto replaced",

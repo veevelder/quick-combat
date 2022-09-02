@@ -49,15 +49,11 @@ Hooks.on("init", () => {
 					else {
 						combat = game.combat;
 					}
-					console.debug("quick-combat | getting player tokens skipping Pets")
-					var tokens = canvas.tokens.controlled.filter(t => t.inCombat === false).filter(function(token) {
-						if (token.actor.data.items.filter(c => c.name == "Pet").length == 0) {
-							return token
-						}
-					});
+					console.debug("quick-combat | getting player tokens skipping Pets/Summons")
+					var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0)
 					
 					// Process each controlled token, as well as the reference token
-					const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.data.hidden}});
+					const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.document.hidden}});
 					console.debug("quick-combat | adding combatants to combat")
 					await combat.createEmbeddedDocuments("Combatant", createData)
 					if (CONFIG.hasOwnProperty("DND5E")) {
@@ -87,7 +83,7 @@ Hooks.on("init", () => {
 Hooks.on("ready", () => {
 	console.debug("quick-combat | register settings")
 	let playlists = {"None":"None"}
-	game.playlists.contents.map(x => playlists[x.data.name] = x.data.name)
+	game.playlists.contents.map(x => playlists[x.name] = x.name)
 	// module settings
 	game.settings.register("quick-combat", "playlist", {
 		name: "QuickCombat.Playlist",
@@ -95,6 +91,8 @@ Hooks.on("ready", () => {
 		scope: "world",
 		config: true,
 		choices: playlists,
+		type: String,
+		default: "None"
 	});
 	game.settings.register("quick-combat", "boss-playlist", {
 		name: "QuickCombat.BossPlaylist",
@@ -102,6 +100,8 @@ Hooks.on("ready", () => {
 		scope: "world",
 		config: true,
 		choices: playlists,
+		type: String,
+		default: "None"
 	});
 	game.settings.register("quick-combat", "fanfare-playlist", {
 		name: "QuickCombat.FanfarePlaylist",
@@ -109,6 +109,8 @@ Hooks.on("ready", () => {
 		scope: "world",
 		config: true,
 		choices: playlists,
+		type: String,
+		default: "None"
 	});
 	game.settings.register("quick-combat", "chooseplaylist", {
 		name: "QuickCombat.ChoosePlaylist",
@@ -277,12 +279,13 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (game.settings.get("quick-combat", "exp")) {
 		let exp = 0;
 		let defeated = [];
-		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.data.defeated).forEach(function(a) {
+		//get only defeated NPCs that are hostile
+		combat.combatants.filter(x => x.isNPC).filter(x => x.token.disposition == -1).filter(x => x.isDefeated).forEach(function(a) {
 			if (CONFIG.hasOwnProperty("OSE")) {
-				exp += parseInt(a.actor.data.data.details.xp);
+				exp += parseInt(a.actor.system.details.xp);
 			}
 			else if(CONFIG.hasOwnProperty("DND5E")) {
-				exp += a.actor.data.data.details.xp.value;
+				exp += a.actor.system.details.xp.value;
 			}
 			defeated.push(a.name); 
 		});
@@ -300,37 +303,37 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 					if (CONFIG.hasOwnProperty("OSE")) {
 						console.log("exp", exp)
 						//calculate share should be 100%
-						exp = exp * (a.actor.data.data.details.xp.share / 100)
+						exp = exp * (a.actor.system.details.xp.share / 100)
 						//add ose specific details: previous exp amount + exp + bonus
-						new_exp = Math.round(a.actor.data.data.details.xp.value + exp + (exp * (a.actor.data.data.details.xp.bonus / 100)))
+						new_exp = Math.round(a.actor.system.details.xp.value + exp + (exp * (a.actor.system.details.xp.bonus / 100)))
 					}
 					else if(CONFIG.hasOwnProperty("DND5E")) {
-						new_exp = a.actor.data.data.details.xp.value + exp
+						new_exp = a.actor.system.details.xp.value + exp
 					}
 					let level_up = ""
 					//get next level exp
 					let max_xp = null
 					if (CONFIG.hasOwnProperty("OSE")) {
-						max_xp = a.actor.data.data.details.xp.next
+						max_xp = a.actor.system.details.xp.next
 					}
 					else if(CONFIG.hasOwnProperty("DND5E")) {
-						max_xp = a.actor.data.data.details.xp.max
+						max_xp = a.actor.system.details.xp.max
 					}
 					if (new_exp >= max_xp) {
 						level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
 						if (CONFIG.hasOwnProperty("OSE")) {
 							a.actor.update({
-								"data.details.level": a.actor.data.data.details.level + 1
+								"data.details.level": a.actor.system.details.level + 1
 							});
 						}
 						else if(CONFIG.hasOwnProperty("DND5E")) {
 							let cl = a.actor.items.find(a => a.type == "class")
 							cl.update({
-								"data.levels": cl.data.data.levels + 1
+								"data.levels": cl.system.levels + 1
 							})
 						}
 					}
-					actor_exp_msg += "<tr data-tokenid='" + a.token.id + "' class='quick-combat-token-selector'><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.data.data.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
+					actor_exp_msg += "<tr data-tokenid='" + a.token.id + "' class='quick-combat-token-selector'><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.system.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 					a.actor.update({
 						"data.details.xp.value": new_exp
 					});
@@ -378,7 +381,7 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 	//play fanfare playlist if set
 	if (fanfare != "None") {
 		console.debug(`quick-combat | starting fanfare playlist ${fanfare}`)
-		var items = Array.from(game.playlists.getName(fanfare).data.sounds);
+		var items = Array.from(game.playlists.getName(fanfare).sounds);
 		var item = items[Math.floor(Math.random()*items.length)];
 		console.debug(`quick-combat | starting fanfare track ${item.name}`)
 		game.playlists.getName(fanfare).playSound(item);
@@ -387,7 +390,8 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (game.settings.get("quick-combat", "rmDefeated")) {
 		console.debug("quick-combat | removing defeated NPCs")
 		var ids = []
-		combat.combatants.filter(x => !x.actor.hasPlayerOwner).filter(x => x.data.defeated).forEach(function(a) {
+		//add only Hostile NPCs
+		combat.combatants.filter(x => x.isNPC).filter(x => x.token.disposition == -1).filter(x => x.isDefeated).forEach(function(a) {
 			//check if tokens exists first
 			if (game.scenes.current.tokens.has(a.token.id)) {
 				console.debug(`quick-combat | removing defeated NPC ${a.token.name}`)
@@ -409,13 +413,13 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	//if fanfare playlist has been set
 	let fanfare = get_playlist("fanfare-playlist")
 	if (fanfare != "None") {
-		if (playlist.data.name != fanfare)
+		if (playlist.name != fanfare)
 			return true;
 	}
 	//otherwise check if combat playlist has stopped
 	else {
 		let name = get_playlist("combatPlaylist")
-		if (name != playlist.data.name) {
+		if (name != playlist.name) {
 			return true;
 		}
 	}
@@ -424,7 +428,7 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	console.debug("quick-combat | starting old playlist")
 	//start old playlist
 	let playlists = get_playlist("oldPlaylist")
-	if (playlists == "None") {
+	if (!playlists || playlists == null || playlists == "None") {
 		console.warn("no old playlists found, skipping")
 		return true;
 	}
@@ -440,7 +444,7 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 	let ids = html.find(".quick-combat-token-selector")
 	ids.click(function(event) {
 		event.preventDefault();
-		if (!canvas?.scene?.data.active) return;
+		if (!canvas?.scene?.active) return;
 		const token = canvas.tokens?.get($(event.currentTarget).data("tokenid"));
 		token?.control({ multiSelect: false, releaseOthers: true });
 	})
