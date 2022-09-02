@@ -1,7 +1,5 @@
 ![Latest Release Download Count](https://img.shields.io/github/downloads/veevelder/quick-combat/latest/module.zip) ![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fquick-combat&colorB=4aa94a) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Fveevelder%2Fquick-combat%2Fmaster%2Fmodule.json&label=Foundry%20Version&query=$.compatibleCoreVersion&colorB=orange)
 
-# BREAKING
-With the update of version 0.2.5 of quick hits it will remove your old saved playlist setting. You will need to update the Quick Hit settings.
 
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
@@ -10,6 +8,7 @@ Adds Auto Experience Tracking. When NPCs are defeated it will add the experience
 
 Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
 
+Includes a compendium of character features to exclude from combat.
 
 ## Current Game System Support
 This module has been tested with the systems listed below. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
@@ -32,8 +31,6 @@ With the new keybind capabilities built into Foundry Quick Combat no longer requ
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives. Doesn't do anything for the OSE system.
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
-* ~~**Combat Toggle Keybind** - Keybind combination to start and stop combat.~~ Its not located in the Configure Controls Settings Menu, Under Quick Hits.
-* ~~**Combat Toggle Keybind WITHOUT playlist** - Keybind combination to start and stop combat, but will not start the Combat Playlist or Fanfare Playlist.~~ Not longer exists due to Playlist Selection Window
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
 
 ### Keybind Settings
@@ -44,6 +41,15 @@ Under the Configure Control Settings Menu is located a **Quick Combat** Action C
 
 **NOTE** Due to the way this Foundry setting works I had to change the default keybind from `Shift + C` to `Alt + C`.
 
+### Pets and Summons
+Included with the module is a compendium of features Pet and Summon.
+
+![Quick Combat Settings](images/pack.png)
+
+If any character sheet has either of these Features included into them they will **NOT** be included in the combat tracker.
+
+![Quick Combat Settings](images/pet-summon.png)
+
 ### Start Combat
 ![Quick Combat Tokens Selected](images/tokens-selected.png)
 
@@ -51,7 +57,7 @@ Select all tokens for combat.
 
 Hit the Combat Toggle Keybind hot key.
 
-**New in Version 0.2.6** If enabled: A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
+**If enabled:** A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
 
 ![Quick Combat Playlist With Boss](images/start-playlist-window-withboss.png)
 

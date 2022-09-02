@@ -38,14 +38,6 @@
 			"path": "./packs/quick-combat-features.db",
 			"module": "quick-combat",
 			"type": "Item"
-		},		
-		{
-			"name": "quick-combat-features",
-			"label": "Quick Combat Features",
-			"system": "ose",
-			"path": "./packs/quick-combat-features.db",
-			"module": "quick-combat",
-			"type": "Item"
 		}
 	],
 	"url": "This is auto replaced",
