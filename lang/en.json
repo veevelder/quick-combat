@@ -27,5 +27,7 @@
 	"QuickCombat.PlaylistWindowDescription": "Select an option to start the combat playlist",
 	"QuickCombat.CombatButton": "Combat",
 	"QuickCombat.BossButton": "Boss",
-	"QuickCombat.NoneButton": "None"
+	"QuickCombat.NoneButton": "None",
+	"QuickCombat.CombatMarkers": "Enable Combat Markers?",
+	"QuickCombat.CombatMarkersHint": "Adds combat markers to current token and on deck token"
 }

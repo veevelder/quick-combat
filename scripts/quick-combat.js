@@ -68,6 +68,7 @@ Hooks.on("init", () => {
 						await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
 						console.log("quick-combat | starting combat")
 						await combat.startCombat();
+						
 					}
 					else if (CONFIG.hasOwnProperty("OSE")) {
 						console.debug("quick-combat | skipping combat rolling for OSE")
@@ -157,6 +158,18 @@ Hooks.on("ready", () => {
 		hint: "QuickCombat.RemoveDefeatedHint",
 		scope: "world",
 		config: true,
+		default: false,
+		type: Boolean,
+	});
+	conf = false
+	if(game.modules.getName("JB2A_DnD5e")?.active && game.modules.getName("sequencer")?.active) {
+		conf = true
+	}
+	game.settings.register("quick-combat", "combatMarkers", {
+		name: "QuickCombat.CombatMarkers",
+		hint: "QuickCombat.CombatMarkersHint",
+		scope: "world",
+		config: conf,
 		default: false,
 		type: Boolean,
 	});
@@ -386,6 +399,10 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		console.debug(`quick-combat | starting fanfare track ${item.name}`)
 		game.playlists.getName(fanfare).playSound(item);
 	}
+	if(game.settings.get("quick-combat", "combatMarkers")) {
+		Sequencer.EffectManager.endEffects({ name: "activeTurn" })
+		Sequencer.EffectManager.endEffects({ name: "onDeck" })
+	}
 	//remove defeated npcs
 	if (game.settings.get("quick-combat", "rmDefeated")) {
 		console.debug("quick-combat | removing defeated NPCs")
@@ -448,4 +465,65 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 		const token = canvas.tokens?.get($(event.currentTarget).data("tokenid"));
 		token?.control({ multiSelect: false, releaseOthers: true });
 	})
+})
+
+Hooks.on("updateCombat", async (combat, updates, diff, id) => {
+	if(game.settings.get("quick-combat", "combatMarkers")) {
+		// check if theres a combat
+		if(combat?.active) {
+			//remove activeTurn/onDeck on previous source should have not animations
+			Sequencer.EffectManager.endEffects({ name: "activeTurn" })
+			Sequencer.EffectManager.endEffects({ name: "onDeck" })
+			//get the next non defeated token
+			var nextToken = null
+			var i = 1
+			while (nextToken == null) {
+				var tmp = combat.turns[(game.combats.active.turn + i) % game.combats.active.turns.length]
+				if (!tmp.defeated) {
+					nextToken = game.canvas.tokens.get(tmp.tokenId)
+				}
+				i += 1
+			}
+			//add on deck animation if it doesn't already exist
+			if(Sequencer.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
+				new Sequence("quick-combat")
+					.effect()
+						.file("jb2a.magic_signs.circle.01.abjuration")
+						.attachTo(nextToken)
+						.scaleToObject(2)
+						.elevation(-1)
+						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
+						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
+						.rotateOut(90, 2500, {ease: "easeInOutCubic"})
+						.scaleIn(2, 2500, {ease: "easeInOutCubic"})
+						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+						.name("onDeck")
+						.persist()
+						.playIf(!nextToken.document.hidden)
+					.play()
+			}
+			//add active turn if it doesn't already exist
+			const currentToken = game.canvas.tokens.get(combat.current.tokenId)
+			if(Sequencer.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
+				new Sequence("quick-combat")
+					.effect()
+						.file("jb2a.magic_signs.circle.01.conjuration")
+						.attachTo(currentToken)
+						.scaleToObject(2)
+						.elevation(-1)
+						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
+						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
+						.rotateOut(90, 2500, {ease: "easeInOutCubic"})
+						.scaleIn(2, 2500, {ease: "easeInOutCubic"})
+						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+						.name("activeTurn")
+						.persist()
+						.playIf(!currentToken.document.hidden)
+					.play()
+
+			}
+		}
+	}
 })

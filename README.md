@@ -10,6 +10,10 @@ Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their ini
 
 Includes a compendium of character features to exclude from combat.
 
+Optional Feature to display Current Turn and On Deck Markers on tokens. This feature will only be displayed if you have the following additional modules enabled:
+* [Sequencer](https://github.com/fantasycalendar/FoundryVTT-Sequencer)
+* [Jules&Ben's Animated Assets](https://github.com/Jules-Bens-Aa/JB2A_DnD5e)
+
 ## Current Game System Support
 This module has been tested with the systems listed below. Plan is to make it available to other systems in the future. For other systems, everything except the Experience tracking should work, but this has not been tested yet.
 
@@ -32,6 +36,7 @@ With the new keybind capabilities built into Foundry Quick Combat no longer requ
 * **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
+* **Enable Combat Markers?** - Adds combat markers to current token and on deck token.
 
 ### Keybind Settings
 
@@ -119,3 +124,30 @@ Before
 
 ![Remove Defeated After](images/removed-defeated-after.png)
 After
+
+### Combat Markers
+Combat Markers will only work if the following modules are enabled:
+* [Sequencer](https://github.com/fantasycalendar/FoundryVTT-Sequencer)
+* [Jules&Ben's Animated Assets](https://github.com/Jules-Bens-Aa/JB2A_DnD5e)
+
+Adds an animated icon to the Current Active Turn Token and the On Deck Token.
+* Current Token is the Yellow animated image
+* On Deck is the Blue animated image
+
+**NOTES**
+* The On Deck marker will skip any defeated combatants
+* Any hidden (sneaking) tokens will be skipped from being marked. I havent found a good way to make the animation hidden just yet.
+
+![Combat Marker Settings](images/combMarkersSetting.png)
+
+Once Combat has started and every time the next turn button is clicked the Current/On Deck markers will move to the respected tokens
+
+![Combat Markers](images/combatMarkers.png)
+
+The combat Markers will skip any defeated combatants when finding the On Deck Marker
+
+![Combat Markers Skip Defeated](images/combatMarkersDefeated.png)
+
+The Combat Markers will ignore any hidden token, if token becomes visible the animation will not be applied until next turn.
+
+![Combat Markers Skip Hidden](images/combatMarkersHidden.png)
