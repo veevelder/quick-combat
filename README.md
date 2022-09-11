@@ -1,5 +1,8 @@
-![Latest Release Download Count](https://img.shields.io/github/downloads/veevelder/quick-combat/latest/module.zip) ![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fquick-combat&colorB=4aa94a) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2Fveevelder%2Fquick-combat%2Fmaster%2Fmodule.json&label=Foundry%20Version&query=$.compatibleCoreVersion&colorB=orange)
-
+[![Latest Version](https://img.shields.io/github/v/release/veevelder/quick-combat?display_name=tag&sort=semver&label=Latest%20Version)](https://github.com/veevelder/quick-combat/releases/latest)
+![Latest Release Download Count](https://img.shields.io/github/downloads/veevelder/quick-combat/latest/module.zip)
+[![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fquick-combat&colorB=4aa94a)](https://forge-vtt.com/bazaar#package=quick-combat)
+![Supported Foundry Versions](https://img.shields.io/endpoint?url=https://foundryshields.com/version?url=https://github.com/veevelder/quick-combat/releases/latest/download/module.json)
+[![License](https://img.shields.io/github/license/veevelder/quick-combat?label=License)](LICENSE)
 
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
