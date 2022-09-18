@@ -58,17 +58,16 @@ Hooks.on("init", () => {
 					await combat.createEmbeddedDocuments("Combatant", createData)
 					if (CONFIG.hasOwnProperty("DND5E")) {
 						console.log("quick-combat | rolling initiatives for NPCs")
-						await combat.rollNPC()
+						await combat.rollNPC({"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
 						//check for PC roll option
-						if (game.settings.get("quick-combat", "npcroll")) {
-							return;
+						if (!game.settings.get("quick-combat", "npcroll")) {
+							console.log("quick-combat | rolling initiatives for PCs")
+							//roll all PCs that haven't rolled initiative yet
+							var cmb = combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id)
+							await combat.rollInitiative(cmb, {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
+							console.log("quick-combat | starting combat")
+							await combat.startCombat();
 						}
-						console.log("quick-combat | rolling initiatives for PCs")
-						//roll all PCs that haven't rolled initiative yet
-						await combat.rollInitiative(combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id))
-						console.log("quick-combat | starting combat")
-						await combat.startCombat();
-						
 					}
 					else if (CONFIG.hasOwnProperty("OSE")) {
 						console.debug("quick-combat | skipping combat rolling for OSE")
@@ -504,7 +503,7 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 					.play()
 			}
 			//add active turn if it doesn't already exist
-			const currentToken = game.canvas.tokens.get(combat.current.tokenId)
+			const currentToken = canvas.tokens.get(combat.current.tokenId)
 			if(Sequencer?.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
 				new Sequence("quick-combat")
 					.effect()
