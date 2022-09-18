@@ -472,8 +472,8 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 		// check if theres a combat
 		if(combat?.active) {
 			//remove activeTurn/onDeck on previous source should have not animations
-			Sequencer.EffectManager.endEffects({ name: "activeTurn" })
-			Sequencer.EffectManager.endEffects({ name: "onDeck" })
+			Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
+			Sequencer?.EffectManager.endEffects({ name: "onDeck" })
 			//get the next non defeated token
 			var nextToken = null
 			var i = 1
@@ -485,13 +485,13 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 				i += 1
 			}
 			//add on deck animation if it doesn't already exist
-			if(Sequencer.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
+			if(Sequencer?.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
 				new Sequence("quick-combat")
 					.effect()
 						.file("jb2a.magic_signs.circle.01.abjuration")
 						.attachTo(nextToken)
 						.scaleToObject(2)
-						.elevation(-1)
+						.elevation(0)
 						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
@@ -505,13 +505,13 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 			}
 			//add active turn if it doesn't already exist
 			const currentToken = game.canvas.tokens.get(combat.current.tokenId)
-			if(Sequencer.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
+			if(Sequencer?.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
 				new Sequence("quick-combat")
 					.effect()
 						.file("jb2a.magic_signs.circle.01.conjuration")
 						.attachTo(currentToken)
 						.scaleToObject(2)
-						.elevation(-1)
+						.elevation(0)
 						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
@@ -522,7 +522,6 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 						.persist()
 						.playIf(!currentToken.document.hidden)
 					.play()
-
 			}
 		}
 	}
