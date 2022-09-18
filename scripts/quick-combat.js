@@ -480,7 +480,7 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 			while (nextToken == null) {
 				var tmp = combat.turns[(game.combats.active.turn + i) % game.combats.active.turns.length]
 				if (!tmp.defeated) {
-					nextToken = game.canvas.tokens.get(tmp.tokenId)
+					nextToken = canvas.tokens.get(tmp.tokenId)
 				}
 				i += 1
 			}
