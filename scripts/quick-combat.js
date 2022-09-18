@@ -162,7 +162,7 @@ Hooks.on("ready", () => {
 		type: Boolean,
 	});
 	conf = false
-	if(game.modules.getName("JB2A_DnD5e")?.active && game.modules.getName("sequencer")?.active) {
+	if(game.modules.get("JB2A_DnD5e")?.active && game.modules.get("sequencer")?.active) {
 		conf = true
 	}
 	game.settings.register("quick-combat", "combatMarkers", {
@@ -399,10 +399,9 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		console.debug(`quick-combat | starting fanfare track ${item.name}`)
 		game.playlists.getName(fanfare).playSound(item);
 	}
-	if(game.settings.get("quick-combat", "combatMarkers")) {
-		Sequencer.EffectManager.endEffects({ name: "activeTurn" })
-		Sequencer.EffectManager.endEffects({ name: "onDeck" })
-	}
+	//remove any effects
+	Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
+	Sequencer?.EffectManager.endEffects({ name: "onDeck" })
 	//remove defeated npcs
 	if (game.settings.get("quick-combat", "rmDefeated")) {
 		console.debug("quick-combat | removing defeated NPCs")
@@ -468,7 +467,8 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 })
 
 Hooks.on("updateCombat", async (combat, updates, diff, id) => {
-	if(game.settings.get("quick-combat", "combatMarkers")) {
+	//only run for the GM
+	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM)) {
 		// check if theres a combat
 		if(combat?.active) {
 			//remove activeTurn/onDeck on previous source should have not animations
