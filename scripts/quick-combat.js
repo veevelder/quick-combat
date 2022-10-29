@@ -12,69 +12,75 @@ function get_playlist(playlist_name) {
 	return "None"
 }
 
+async function hotkey() {
+	console.debug("quick-combat | combat hotkey pressed")
+	if (game.combat) {
+		console.debug("quick-combat | combat found stopping combat")
+		game.combat.endCombat();
+	}
+	else {
+		console.debug("quick-combat | starting combat")
+		//check if GM has any selected tokens
+		if (canvas.tokens.controlled.length === 0) {
+			ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+		}
+		else {			
+			console.debug("quick-combat | getting player tokens skipping Pets/Summons")
+			var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0)
+
+			// rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
+			var combat = game.combats.viewed;
+			if (!combat) {
+				if (game.user.isGM) {
+					console.debug("quick-combat | creating new combat")
+					const cls = getDocumentClass("Combat");
+					combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
+				} else {
+					ui.notifications.warn("COMBAT.NoneActive", {localize: true});
+					return [];
+				}
+			}
+
+			// Process each controlled token, as well as the reference token
+			console.debug("quick-combat | adding combatants to combat")
+			const createData = tokens.map(t => {
+				return {
+					tokenId: t.id,
+					sceneId: t.scene.id,
+					actorId: t.document.actorId,
+					hidden: t.document.hidden
+				}
+			});
+			await combat.createEmbeddedDocuments("Combatant", createData)
+
+			//do system specific rolling options
+			if (CONFIG.hasOwnProperty("DND5E")) {
+				console.log("quick-combat | rolling initiatives for NPCs")
+				await combat.rollNPC({"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
+				//check for PC roll option
+				if (!game.settings.get("quick-combat", "npcroll")) {
+					console.log("quick-combat | rolling initiatives for PCs")
+					//roll all PCs that haven't rolled initiative yet
+					var cmb = combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id)
+					await combat.rollInitiative(cmb, {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
+					console.log("quick-combat | starting combat")
+					await combat.startCombat();
+				}
+			}
+			else if (CONFIG.hasOwnProperty("OSE")) {
+				console.debug("quick-combat | skipping combat rolling for OSE")
+			}
+		}
+	}
+}
+
 Hooks.on("init", () => {
 	console.debug("quick-combat | register keybind settings")
 	game.keybindings.register("quick-combat", "key", {
 		name: "QuickCombat.Keybind",
 		hint: "QuickCombat.KeybindHint",
 		editable: [{key: "C", modifiers: ["Alt"]}],
-		onDown: async function() {
-			console.debug("quick-combat | combat hotkey pressed")
-			if (game.combat) {
-				console.debug("quick-combat | combat found stopping combat")
-				game.combat.endCombat();
-			}
-			else {
-				console.debug("quick-combat | starting combat")
-				//check if combat tracker has combatants
-				if(game.combat && game.combat.combatants.length > 0) {
-					game.combat.startCombat();
-				}
-				//check if GM has any selected tokens
-				else if (canvas.tokens.controlled.length === 0) {
-					ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
-				}
-				else {
-					// Reference the combat encounter displayed in the Sidebar if none was provided
-					var combat = ui.combat.combat;
-					if ( !combat ) {
-						if ( game.user.isGM ) {
-							console.debug("quick-combat | creating new combat")
-							combat = await game.combats.documentClass.create({scene: canvas.scene.id, active: true});
-						}
-						else {
-							return ui.notifications.warn(game.i18n.localize("COMBAT.NoneActive"));
-						}
-					}
-					else {
-						combat = game.combat;
-					}
-					console.debug("quick-combat | getting player tokens skipping Pets/Summons")
-					var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0)
-					
-					// Process each controlled token, as well as the reference token
-					const createData = tokens.map(t => {return {tokenId: t.id, hidden: t.document.hidden}});
-					console.debug("quick-combat | adding combatants to combat")
-					await combat.createEmbeddedDocuments("Combatant", createData)
-					if (CONFIG.hasOwnProperty("DND5E")) {
-						console.log("quick-combat | rolling initiatives for NPCs")
-						await combat.rollNPC({"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
-						//check for PC roll option
-						if (!game.settings.get("quick-combat", "npcroll")) {
-							console.log("quick-combat | rolling initiatives for PCs")
-							//roll all PCs that haven't rolled initiative yet
-							var cmb = combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id)
-							await combat.rollInitiative(cmb, {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
-							console.log("quick-combat | starting combat")
-							await combat.startCombat();
-						}
-					}
-					else if (CONFIG.hasOwnProperty("OSE")) {
-						console.debug("quick-combat | skipping combat rolling for OSE")
-					}
-				}
-			}
-		},
+		onDown: hotkey,
 		restricted: true, //gmonly
 		precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
 	});
@@ -399,8 +405,10 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		game.playlists.getName(fanfare).playSound(item);
 	}
 	//remove any effects
-	Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
-	Sequencer?.EffectManager.endEffects({ name: "onDeck" })
+	if (game.modules.get("Sequencer")) {
+		Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
+		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
+	}
 	//remove defeated npcs
 	if (game.settings.get("quick-combat", "rmDefeated")) {
 		console.debug("quick-combat | removing defeated NPCs")
