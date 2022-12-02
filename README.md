@@ -176,4 +176,4 @@ This setting will allow for skipping the dialog window from displaying for NPCs,
 * PCs - The dialog will display for all NPCs
 * Both - There will be no dialog for both NPCs and PCs
 
-![PF2e Skip Dialog](images/settings_pf2e_skipdialog.png)
+![PF2e Skip Dialog](images/setting_pf2e_skipdialog.png)
