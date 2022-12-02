@@ -1,0 +1,78 @@
+<form class="flexcol" autocomplete='off' onsubmit="event.preventDefault();">
+	<header class="flex0">
+		<p>{{localize 'QuickCombat.playlist.intro1'}}</p>
+		<p>{{localize 'QuickCombat.playlist.intro2'}}</p>
+		<p>{{localize 'QuickCombat.playlist.intro3'}}</p>
+	</header>
+	<section class="content">
+		<ol class="table-results">
+			<li class="table-result table-header flexrow">
+				<div class="result-input">
+					<label>{{localize 'QuickCombat.playlist.label'}}</label>
+				</div>
+				<div class="result-input">
+					<label>{{localize 'QuickCombat.scene.label'}}</label>
+				</div>
+				<div class="result-check">
+					<label>{{localize 'QuickCombat.fanfare.label'}}</label>
+				</div>
+				<div class="result-controls">
+					<label>{{localize 'QuickCombat.remove.label'}}</label>
+				</div>
+			</li>
+			{{#each qc_playlists as |playlist idx|}}
+			<li class="table-result flexrow">
+				<div class="result-input">
+					<div class="form-group">
+						<select name="{{idx}}.id">
+							{{#each playlist.playlist_ids as | p|}}
+								{{#if p.selected}}
+									<option value="{{p.id}}" selected>
+								{{else}}
+									<option value="{{p.id}}">
+								{{/if}}
+									{{p.name}}
+								</option>
+							{{/each}}
+						</select>
+					</div>
+				</div>
+				<div class="result-input">
+					<div class='form-group'>
+						<select name="{{idx}}.scene">
+							<option value=""></option>
+							{{#each playlist.scene_ids as | s|}}
+								{{#if s.selected}}
+									<option value="{{s.id}}" selected>
+								{{else}}
+									<option value="{{s.id}}">
+								{{/if}}
+									{{s.name}}
+								</option>
+							{{/each}}
+						</select>
+					</div>
+				</div>
+				<div class="result-check">
+					<div class='form-group'>
+						{{#if playlist.fanfare}}
+						<input type='checkbox' name="{{idx}}.fanfare" checked>
+						{{else}}
+						<input type='checkbox' name="{{idx}}.fanfare">
+						{{/if}}
+					</div>
+				</div>
+				<div class="result-controls">
+					<i class='far fa-trash-alt remove-playlist' data-idx="{{idx}}"></i>
+				</div>
+			</li>
+			{{/each}}
+		</ol>
+	</section>
+	<footer class='sheet-footer flexrow'>
+		<div class="form-group">
+			<button type='submit' name='submit'><i class='far fa-save'></i>{{localize 'QuickCombat.save'}}</button>
+			<button class='add-playlist'><i class='far fa-plus-square'></i>{{localize 'QuickCombat.add'}}</button>
+		</div>
+	</footer>
+</form>

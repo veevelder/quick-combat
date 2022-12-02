@@ -6,6 +6,8 @@
 
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
+ * **NEW Feature!** You can now define any number of playlists Combat/Boss/Mini Boss whatever fits your needs. Works best with the `Choose Playlist Settings. You can even define playlists for specific scenes!
+ * **NOTE*** The module will make its best attempt to migrate the old playlist settings over to the new system. You should make sure your playlists are setup correctly
 
 Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs.
 
@@ -22,24 +24,31 @@ This module has been tested with the systems listed below. Plan is to make it av
 
 * [D&D 5e](https://gitlab.com/foundrynet/dnd5e)
 * [OSE](https://github.com/vttred/ose)
+* [PF2e](https://github.com/foundryvtt/pf2e/)
 
 ## How To Use Quick Combat
-
-### FoundryVTT Version 9 Updates
-With the new keybind capabilities built into Foundry Quick Combat no longer requires any dependencies, and some of the settings have moved/changed as noted below. The same basic functionality still exists.
 
 ### Settings
 
 ![Quick Combat Settings](images/settings.png)
 
-* **Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist.
-* **Fanfare Playlist** - select from a list of playlists to play when combat ends, will randomly select a track to play.
-* **Boss Combat Playlist** - select from a list of playlists to play when starting combat, or None to not change the playlist. This is separate from the Combat Playlist.
+* The following playlist settings have been moved and no longer available:
+  * ~~**Combat Playlist**~~ - select from a list of playlists to play when starting combat, or None to not change the playlist.
+  * ~~**Fanfare Playlist**~~ - select from a list of playlists to play when combat ends, will randomly select a track to play.
+  * ~~**Boss Combat Playlist**~~ - select from a list of playlists to play when starting combat, or None to not change the playlist. This is separate from the Combat Playlist.
+* **Setup Combat playlists** - A new window will open where you can create your Combat Playlist settings. You can have any number of playlists defined for any number of scenes or no scenes. If you have multiple playlists defined, it is recommended to enable the `Choose Playlist` option, otherwise a **Random** playlist will be chosen to start. (see below for more info)
+  * **Playlist** - select from a list of playlists to play when starting combat
+  * **Scene** - only play the playlist on a specific scene, this means the playlist will only be played on that scene and no where else
+  * **Fanfare** - if a Fanfare playlist check this box, this will only be played after combat has ended. It will select a random track to be played once.
+  * **Remove** - remove a playlist option
+  * **Save** - save playlist options
+  * **Add** - add a new playlist option
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives. Doesn't do anything for the OSE system.
-* **Combat Experience Tracking** - (DND5E Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
+* **Combat Experience Tracking** - (DND5E/OSE Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
+* **Skip Initiative Dialog** (PF2e Only!) Skip the Roll Initiative Dialog Box.
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
-* **Enable Combat Markers?** - Adds combat markers to current token and on deck token.
+* **Enable Combat Markers?** - (Only Available with Jules&Ben's Animated Assets and Sequencer Modules) Adds combat markers to current token and on deck token.
 
 ### Keybind Settings
 
@@ -49,7 +58,7 @@ Under the Configure Control Settings Menu is located a **Quick Combat** Action C
 
 **NOTE** Due to the way this Foundry setting works I had to change the default keybind from `Shift + C` to `Alt + C`.
 
-### Pets and Summons
+### Pets and Summons (DND5e Only)
 Included with the module is a compendium of features Pet and Summon.
 
 ![Quick Combat Settings](images/pack.png)
@@ -65,15 +74,15 @@ Select all tokens for combat.
 
 Hit the Combat Toggle Keybind hot key.
 
-**If enabled:** A Window will pop up asking which playlist to start. Select which playlist to start or None to start no playlist and continue the same as before.
+**If enabled:** A Window will pop up asking which playlist to start. Select which playlist to start or None/Close to start no playlist and continue the same as before.
 
-![Quick Combat Playlist With Boss](images/start-playlist-window-withboss.png)
+![Quick Combat Playlist Select](images/playlist_picker.png)
 
-If you have set a boss playlist in the settings the option will appear.
+If you have set any playlists in the settings they will appear here.
 
-![Quick Combat Playlist With Boss](images/start-playlist-window-withoutboss.png)
+![Quick Combat Playlist Select](images/playlist_scene_picker.png)
 
-If no boss playlist has been set in the settings the boss playlist option will not appear.
+If you have set any playlist that is tied to a scene they will **only** be available for that scene.
 
 ![Quick Combat Start](images/combat-start.png)
 
@@ -84,14 +93,15 @@ Adds all selected tokens to combat tracker, rolls all tokens initiatives, starts
 
 Hit the Combat Toggle Keybind hot key, a warning will pop up to make sure it wasn't an accident.
 
-Will remove all combatants, and if experience tracking was enabled will find all defeated NPCs, calculate experience and display a chat box with all PCs experience.
+Will remove all combatants, and if experience tracking was enabled (for the available systems) it will find all defeated NPCs, calculate experience and display a chat box with all PCs experience.
 
 ![Quick End Experience](images/experience-tracking.png)
 
 ### Setup Combat Playlist Example
 ![Quick Combat Playlist](images/settings-withplaylist.png)
 
-Setup Quick Combat to use the "Combat" playlist, start the "Background" playlist.
+Open the Quick Combat Playlist window to configure any number of playlists.
+* If you have multiple playlists defined for any scene or no scenes it is recommend to enable the Choose Playlist option. Otherwise a random playlist will be chosen to start when combat starts.
 
 ![Quick Combat Background Playlist](images/playlist.png)
 
@@ -106,7 +116,7 @@ Fanfare Playlist will only play at the end of combat. It will randomly select a 
 
 ![Fanfare Settings](images/fanfare_settings.png)
 
-It is recommended that you set up the playlist using the `Soundboard Only` Playback Mode as shown below. You can also set the Fade Duration for any track if you require it.
+It is recommended that you set up the playlist using the `Soundboard Only` Playback Mode as shown below. You can also set the Fade Duration for any track if you require it. You can also limit Fanfare playlists by scenes.
 
 ![Fanfare Playlist](images/fanfare_playlist.png)
 
@@ -139,7 +149,7 @@ Adds an animated icon to the Current Active Turn Token and the On Deck Token.
 
 **NOTES**
 * The On Deck marker will skip any defeated combatants
-* Any hidden (sneaking) tokens will be skipped from being marked. I havent found a good way to make the animation hidden just yet.
+* Any hidden (sneaking) tokens will be skipped from being marked. I haven't found a good way to make the animation hidden just yet.
 
 ![Combat Marker Settings](images/combMarkersSetting.png)
 
@@ -154,3 +164,16 @@ The combat Markers will skip any defeated combatants when finding the On Deck Ma
 The Combat Markers will ignore any hidden token, if token becomes visible the animation will not be applied until next turn.
 
 ![Combat Markers Skip Hidden](images/combatMarkersHidden.png)
+
+### Pathfinder Second Edition - Skip Dialog
+Pathfinder has an additional setting available to it, when rolling for initiative the system will display a dialog:
+
+![PF2e Dialog](images/pf2e_init_dialog.png)
+
+This setting will allow for skipping the dialog window from displaying for NPCs, PCs, or Both.
+* " " - The dialog will display for all NPCs and PCs
+* NPCs - The dialog will display for all PCs
+* PCs - The dialog will display for all NPCs
+* Both - There will be no dialog for both NPCs and PCs
+
+![PF2e Skip Dialog](images/settings_pf2e_skipdialog.png)

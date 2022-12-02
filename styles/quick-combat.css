@@ -1,0 +1,51 @@
+#quick-combat-playlists .re-border {
+    border: 1px solid var(--color-underline-header);
+    border-radius: 5px;
+    padding: 3px;
+    margin-bottom: 5px;
+}
+
+#quick-combat-playlists .remove-playlist:hover {
+    text-shadow: 0 0 5px red
+}
+
+#quick-combat-playlists ol.table-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#quick-combat-playlists ol.table-results .table-header {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-border-light-tertiary);
+    line-height: 24px;
+    font-weight: bold;
+}
+
+#quick-combat-playlists ol.table-results .table-result {
+    padding: 2px 0;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+}
+
+#quick-combat-playlists ol.table-results .table-result > div {
+    line-height: 36px;
+    margin-right: 5px;
+}
+
+#quick-combat-playlists ol.table-results .table-result .result-input {
+    flex: 0 0 250px;
+}
+
+#quick-combat-playlists ol.table-results .table-result .result-check {
+    flex: 0 0 50px;
+    text-align: center;
+}
+
+#quick-combat-playlists ol.table-results .table-result .result-controls {
+    flex: none;
+    margin: 0;
+    text-align: center;
+}
