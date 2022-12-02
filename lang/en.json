@@ -47,5 +47,6 @@
 	"QuickCombat.fanfare.label": "Fanfare",
 	"QuickCombat.remove.label": "Remove",
 	"QuickCombat.SkipDialog": "Skip Initiative Dialog",
-	"QuickCombat.SkipDialogHint": "When auto-rolling Initiatives this option will skip the dialog popups and roll for Only NPCs, Only PCs or Both"
+	"QuickCombat.SkipDialogHint": "When auto-rolling Initiatives this option will skip the dialog popups and roll for Only NPCs, Only PCs or Both",
+	"QuickCombat.MigrationMessage": "Quick Combat has attempted to migrate the playlist settings to its new format. Be sure to checkout the settings, and make sure the playlists are correct. For more information on the new playlist settings checkout the Read Me"
 }

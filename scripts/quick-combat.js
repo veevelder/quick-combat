@@ -368,6 +368,7 @@ Hooks.on("ready", () => {
 					})
 				}
 			}
+			ui.notifications.warn(game.i18n.localize("QuickCombat.MigrationMessage"));
 		})
 		game.settings.set("quick-combat", "playlists", qc_playlists)
 		game.settings.set("quick-combat", "migrate", false)
@@ -423,7 +424,7 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 					var playlist = game.playlists.get($(button.currentTarget).data("button"))
 					start_playlist(playlist)
 				},
-				icon:  qc_playlists[i].name.includes("Boss") ? `<i class="fas fa-skull-crossbones"></i>` : `<i class="fas fa-music"></i>`
+				icon:  qc_playlists[i].name.toLowerCase().includes("boss") ? `<i class="fas fa-skull-crossbones"></i>` : `<i class="fas fa-music"></i>`
 			}
 		}		
 		new Dialog({
