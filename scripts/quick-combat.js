@@ -24,7 +24,6 @@ export class QuickCombatPlaylists extends FormApplication {
 	async getData() {
 		//get saved data
 		let qc_playlists = game.settings.get("quick-combat", "playlists")
-		console.log("og", qc_playlists)
 		for (var i = 0; i < qc_playlists.length; i++) {
 			//get scene data
 			qc_playlists[i]["scene_ids"] = [];
@@ -38,7 +37,6 @@ export class QuickCombatPlaylists extends FormApplication {
 			//get playlists data
 			qc_playlists[i]["playlist_ids"] = [];
 			game.playlists.forEach(function(playlist) {
-				console.log(playlist.id, qc_playlists[i].id)
 				qc_playlists[i]["playlist_ids"].push({
 					"id": playlist.id,
 					"name": playlist.name,
@@ -53,7 +51,6 @@ export class QuickCombatPlaylists extends FormApplication {
 	/** @override */
 	async _updateObject(event, formData) {
 		const data = expandObject(formData);
-		console.log("fd", formData)
 		let playlists = []
 		for (let [key, value] of Object.entries(data)) {
 			if (value.name == "") {
@@ -64,7 +61,6 @@ export class QuickCombatPlaylists extends FormApplication {
 				ui.notifications.error(game.i18n.localize("QuickCombat.SavePlaylistError"));
 				return;
 			}
-			console.log(key, value)
 			playlists.push(value)
 		}
 		await game.settings.set("quick-combat", "playlists", playlists);
@@ -127,7 +123,6 @@ function get_playlist(fanfare = false, pickone = false) {
 		let a = []
 		for (var i = 0; i < playlists.length; i++) {
 			var tmp = game.playlists.get(playlists[i].id)
-			console.log(playlists[i], tmp)
 			a.push(tmp)
 		}
 		return a
@@ -486,7 +481,6 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 			}
 		}
 		let qc_playlists = get_playlist()
-		console.log(qc_playlists)
 		for (var i = 0; i < qc_playlists.length; i++) {
 			buttons[qc_playlists[i].id] = {
 				label: qc_playlists[i].name,
@@ -546,7 +540,6 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 				pcs.forEach(function(a) {
 					let new_exp = null;
 					if (CONFIG.hasOwnProperty("OSE")) {
-						console.log("exp", exp)
 						//calculate share should be 100%
 						exp = exp * (a.actor.system.details.xp.share / 100)
 						//add ose specific details: previous exp amount + exp + bonus
