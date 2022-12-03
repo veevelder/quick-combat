@@ -224,6 +224,26 @@ Hooks.on("init", () => {
 
 Hooks.on("ready", () => {
 	console.debug("quick-combat | register settings")
+	//!!!!old settings TO BE REMOVED AT A LATER DATE!!!!
+	game.settings.register("quick-combat", "playlist", {
+		scope: "world",
+		config: false,
+		type: String,
+		default: "Combat"
+	});
+	game.settings.register("quick-combat", "boss-playlist", {
+		scope: "world",
+		config: false,
+		type: String,
+		default: "Boss"
+	});
+	game.settings.register("quick-combat", "fanfare-playlist", {
+		scope: "world",
+		config: false,
+		type: String,
+		default: "Fanfare"
+	});
+
 	//playlist options
 	game.settings.registerMenu("quick-combat", "playlist-template", {
 		name: "QuickCombat.button.name",
@@ -261,12 +281,6 @@ Hooks.on("ready", () => {
 		config: false,
 		default: "",
 		type: Object
-	});
-	game.settings.register("quick-combat", "migrate", {
-		scope: "world",
-		config: false,
-		default: true,
-		type: Boolean
 	});
 
 	//game system specific options
@@ -330,48 +344,81 @@ Hooks.on("ready", () => {
 	});
 
 	//migrate playlists to new playlist menu
-	if (game.settings.get("quick-combat", "migrate")) {
-		var qc_playlists = game.settings.get("quick-combat", "playlists")
-		game.settings.storage.get("world").forEach(a => {
-			if (a.key == "quick-combat.playlist") {
-				var old_playlist = game.playlists.getName(a.value)
-				if (!qc_playlists.map(a => a.id).includes(old_playlist.id)) {
-					console.debug("quick-combat | migrating old combat playlist setting")				
-					qc_playlists.push({
-						"id": old_playlist.id,
-						"scene": "",
-						"fanfare": false
-					})
-				}
+	var qc_playlists = game.settings.get("quick-combat", "playlists")
+	var migrated = false
+
+	try {
+		var old_playlist = game.settings.get("quick-combat", "playlist")
+		if (old_playlist != "None") {
+			var old_playlist_id = game.playlists.getName(old_playlist)?.id ?? null
+			if (old_playlist_id == null) {
+				console.error(`quick-combat | could not locate the matching playlists for ${old_playlist}`)
 			}
-			if (a.key == "quick-combat.boss-playlist") {
-				var old_playlist = game.playlists.getName(a.value)
-				if (!qc_playlists.map(a => a.id).includes(old_playlist.id)) {
-					console.debug("quick-combat | migrating old boss combat playlist setting")
-					var old_playlist = game.playlists.getName(a.value)
-					qc_playlists.push({
-						"playlist": old_playlist.id,
-						"scene": "",
-						"fanfare": false
-					})
-				}
+			else if (!qc_playlists.map(a => a.id).includes(old_playlist_id)) {			
+				console.debug(`quick-combat | migrating old combat playlist setting ${old_playlist} with ${old_playlist_id}`)	
+				qc_playlists.push({
+					"id": old_playlist_id,
+					"scene": "",
+					"fanfare": false
+				})
+				game.settings.set("quick-combat", "playlist", "None")
+				migrated = true
 			}
-			if (a.key == "quick-combat.fanfare-playlist") {
-				var old_playlist = game.playlists.getName(a.value)
-				if (!qc_playlists.map(a => a.id).includes(old_playlist.id)) {
-					console.debug("quick-combat | migrating old fanfare combat playlist setting")
-					var old_playlist = game.playlists.getName(a.value)
-					qc_playlists.push({
-						"playlist": old_playlist.id,
-						"scene": "",
-						"fanfare": true
-					})
-				}
+		}
+	}
+	catch (error) {
+		//ignore migration error
+	}
+
+	try {
+		old_playlist = game.settings.get("quick-combat", "boss-playlist")
+		if (old_playlist != "None") {
+			var old_playlist_id = game.playlists.getName(old_playlist)?.id ?? null
+			if (old_playlist_id == null) {
+				console.error(`quick-combat | could not locate the matching playlists for ${old_playlist}`)
 			}
-			ui.notifications.warn(game.i18n.localize("QuickCombat.MigrationMessage"));
-		})
+			else if (!qc_playlists.map(a => a.id).includes(old_playlist_id)) {
+				console.debug(`quick-combat | migrating old boss combat playlist setting ${old_playlist} with ${old_playlist_id}`)
+				qc_playlists.push({
+					"id": old_playlist_id,
+					"scene": "",
+					"fanfare": false
+				})
+				game.settings.set("quick-combat", "boss-playlist", "None")
+				migrated = true
+			}
+		}
+	}
+	catch (error) {
+		//ignore migration error
+	}
+
+	try {
+		old_playlist = game.settings.get("quick-combat", "fanfare-playlist")
+		if (old_playlist != "None") {
+			var old_playlist_id = game.playlists.getName(old_playlist)?.id ?? null
+			if (old_playlist_id == null) {
+				console.error(`quick-combat | could not locate the matching playlists for ${old_playlist}`)
+			}
+			else if (!qc_playlists.map(a => a.id).includes(old_playlist_id)) {
+				console.debug(`quick-combat | migrating old fanfare combat playlist setting ${old_playlist} with ${old_playlist_id}`)
+				qc_playlists.push({
+					"id": old_playlist_id,
+					"scene": "",
+					"fanfare": true
+				})
+				game.settings.set("quick-combat", "fanfare-playlist", "None")
+				migrated = true
+			}
+		}
+	}
+	catch (error) {
+		//ignore migration error
+	}
+
+	if (migrated) {
 		game.settings.set("quick-combat", "playlists", qc_playlists)
-		game.settings.set("quick-combat", "migrate", false)
+		ui.notifications.warn(game.i18n.localize("QuickCombat.MigrationMessage"));
 	}
 });
 
@@ -379,13 +426,25 @@ async function start_playlist(playlist) {
 	if (playlist) {
 		let playlists = []
 		game.playlists.playing.forEach(function(playing) {
-			playlists.push(playing.id)
+			//not sure how this could happen but make sure an id is set
+			if (playing.id != "") {
+				playlists.push(playing.id)
+			}
+			//otherwise lookup the playlist by name if set
+			else {
+				var old_playlist = game.playlists.getName(playing.name)
+				if (old_playlist.id != "") {
+					playlists.push(old_playlist.id)
+				}
+				else {
+					console.error(`quick-combat | could not locate playlist id for ${playing}`)
+				}
+			}
 			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
 			playing.stopAll()
 		});
 		game.settings.set("quick-combat", "oldPlaylist", playlists)
 
-		//var combatPlaylist = game.playlists.getName(playlist.id)
 		game.settings.set("quick-combat", "combatPlaylist", playlist.id)
 		console.log(`quick-combat | starting combat playlist ${playlist.name}`)
 		playlist.playAll()
@@ -395,7 +454,18 @@ async function start_playlist(playlist) {
 		game.settings.set("quick-combat", "combatPlaylist", null)
 		let playlists = []
 		game.playlists.playing.forEach(function(playing) {
-			playlists.push(playing.id)
+			if (playing.id != "") {
+				playlists.push(playing.id)
+			}
+			else {				
+				var old_playlist = game.playlists.getName(playing.name)
+				if (old_playlist.id != "") {
+					playlists.push(old_playlist.id)
+				}
+				else {
+					console.error(`quick-combat | could not locate playlist id for ${playing}`)
+				}
+			}
 		});
 		game.settings.set("quick-combat", "oldPlaylist", playlists)
 	}
@@ -592,7 +662,7 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 		return true;
 	//if fanfare playlist has been set
 	let fanfare = get_playlist(true, true)
-	if (fanfare) {
+	if (fanfare != null) {
 		if (playlist.id != fanfare.id)
 			return true;
 	}
@@ -608,15 +678,27 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	console.debug("quick-combat | starting old playlist")
 	//start old playlist
 	let playlists = game.settings.get("quick-combat", "oldPlaylist")
-	if (!playlists || playlists == null || playlists == "None") {
+	if (!playlists || playlists == null || playlists == "None" || playlists == []) {
 		console.warn("no old playlists found, skipping")
 		return true;
 	}
 	//start old playlists
 	playlists.forEach(function(id) {
-		var oldPlaylist = game.playlists.get(id)
-		console.debug(`quick-combat | starting old playlist ${oldPlaylist.name}`)
-		oldPlaylist.playAll();
+		//check if id is not an empty string
+		if (id != "") {
+			var oldPlaylist = game.playlists.get(id) ?? null
+			//check if oldPlaylist is defined
+			if (oldPlaylist) {
+				console.debug(`quick-combat | starting old playlist ${oldPlaylist.name}`)
+				oldPlaylist.playAll();
+			}
+			else {
+				console.error(`quick-combat | could not locate a playlist that matches the id ${id}`)
+			}
+		}
+		else {
+			console.error("quick-combat | somehow an empty string got added to the old playlist settings")
+		}
 	})
 	game.settings.set("quick-combat", "oldPlaylist", null)
 });
