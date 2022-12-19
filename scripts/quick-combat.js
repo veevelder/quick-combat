@@ -40,11 +40,13 @@ export class QuickCombatPlaylists extends FormApplication {
 				qc_playlists[i]["playlist_ids"].push({
 					"id": playlist.id,
 					"name": playlist.name,
-					"selected": playlist.id == qc_playlists[i].id
+					"selected": playlist.id == qc_playlists[i].id,
+					"empty": playlist.sounds.size == 0
 				});
 			});
 
 		}
+		console.log(qc_playlists)
 		return {qc_playlists}
 	}
 
@@ -418,14 +420,21 @@ Hooks.once("ready", () => {
 });
 
 async function start_playlist(playlist) {
+	console.log(playlist)
 	let playlists = []
-	if (playlist) {
-		game.playlists.playing.forEach(function(playing) {
-			var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
-			playlists.push({id:playing.id,track_ids:track_ids})
+	//list old playlists
+	game.playlists.playing.forEach(function(playing) {
+		var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
+		playlists.push({id:playing.id,track_ids:track_ids})
+		//if a new playlist was given stop the old ones
+		if (playlist && playlist.sounds.size > 0) {
 			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
 			playing.stopAll()
-		});
+		}
+	});
+	game.settings.set("quick-combat", "oldPlaylist", playlists)
+
+	if (playlist && playlist.sounds.size > 0) {
 		game.settings.set("quick-combat", "combatPlaylist", playlist.id)
 		console.log(`quick-combat | starting combat playlist ${playlist.name}`)
 		playlist.playAll()
@@ -433,13 +442,7 @@ async function start_playlist(playlist) {
 	else {
 		console.debug("quick-combat | setting no playlist to start")
 		game.settings.set("quick-combat", "combatPlaylist", null)
-		let playlists = []
-		game.playlists.playing.forEach(function(playing) {
-			var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
-			playlists.push({id:playing.id,track_ids:track_ids})
-		});
 	}
-	game.settings.set("quick-combat", "oldPlaylist", playlists)
 }
 
 Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
