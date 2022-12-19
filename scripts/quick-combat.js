@@ -418,28 +418,14 @@ Hooks.once("ready", () => {
 });
 
 async function start_playlist(playlist) {
+	let playlists = []
 	if (playlist) {
-		let playlists = []
 		game.playlists.playing.forEach(function(playing) {
-			//not sure how this could happen but make sure an id is set
-			if (playing.id != "") {
-				playlists.push(playing.id)
-			}
-			//otherwise lookup the playlist by name if set
-			else {
-				var old_playlist = game.playlists.getName(playing.name)
-				if (old_playlist.id != "") {
-					playlists.push(old_playlist.id)
-				}
-				else {
-					console.error(`quick-combat | could not locate playlist id for ${playing}`)
-				}
-			}
+			var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
+			playlists.push({id:playing.id,track_ids:track_ids})
 			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
 			playing.stopAll()
 		});
-		game.settings.set("quick-combat", "oldPlaylist", playlists)
-
 		game.settings.set("quick-combat", "combatPlaylist", playlist.id)
 		console.log(`quick-combat | starting combat playlist ${playlist.name}`)
 		playlist.playAll()
@@ -449,21 +435,11 @@ async function start_playlist(playlist) {
 		game.settings.set("quick-combat", "combatPlaylist", null)
 		let playlists = []
 		game.playlists.playing.forEach(function(playing) {
-			if (playing.id != "") {
-				playlists.push(playing.id)
-			}
-			else {				
-				var old_playlist = game.playlists.getName(playing.name)
-				if (old_playlist.id != "") {
-					playlists.push(old_playlist.id)
-				}
-				else {
-					console.error(`quick-combat | could not locate playlist id for ${playing}`)
-				}
-			}
+			var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
+			playlists.push({id:playing.id,track_ids:track_ids})
 		});
-		game.settings.set("quick-combat", "oldPlaylist", playlists)
 	}
+	game.settings.set("quick-combat", "oldPlaylist", playlists)
 }
 
 Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
@@ -495,7 +471,6 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 			title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
 			content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
 			buttons: buttons,
-			close: () => {start_playlist(null)},
 		}).render(true);
 	}
 	else {
@@ -676,17 +651,25 @@ Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 		return true;
 	}
 	//start old playlists
-	playlists.forEach(function(id) {
+	playlists.forEach(function(op) {
 		//check if id is not an empty string
-		if (id != "") {
-			var oldPlaylist = game.playlists.get(id) ?? null
+		if (op.id != "") {
+			var oldPlaylist = game.playlists.get(op.id) ?? null
 			//check if oldPlaylist is defined
 			if (oldPlaylist) {
-				console.debug(`quick-combat | starting old playlist ${oldPlaylist.name}`)
-				oldPlaylist.playAll();
+				if (op.track_ids != []) {
+					console.debug(`quick-combat | starting old playlist ${oldPlaylist.name} tracks ${op.track_ids}`)
+					for (var i = 0; i < op.track_ids.length; i++) {
+						var sound = oldPlaylist.sounds.get(op.track_ids[i])
+						oldPlaylist.playSound(sound)
+					}
+				}
+				else {
+					oldPlaylist.playAll();
+				}
 			}
 			else {
-				console.error(`quick-combat | could not locate a playlist that matches the id ${id}`)
+				console.error(`quick-combat | could not locate a playlist that matches the id ${op.id}`)
 			}
 		}
 		else {
