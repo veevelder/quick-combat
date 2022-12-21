@@ -13,7 +13,7 @@ Adds Auto Experience Tracking. When NPCs are defeated it will add the experience
 
 Adds a Hotkey to quickly add PCs, and NPCs to the combat tracker, roll their initiatives, and start combat.
 
-Includes a compendium of character features to exclude from combat.
+Includes a compendium of character features to exclude actors from combat.
 
 Optional Feature to display Current Turn and On Deck Markers on tokens. This feature will only be displayed if you have the following additional modules enabled:
 * [Sequencer](https://github.com/fantasycalendar/FoundryVTT-Sequencer)
@@ -46,7 +46,7 @@ This module has been tested with the systems listed below. Plan is to make it av
 * **Only Roll Initiative for NPCs?** - When adding combatants to the combat tracker, only roll for NPCs and not PCs. If your players like to roll their own initiatives. Doesn't do anything for the OSE system.
 * **Combat Experience Tracking** - (DND5E/OSE Only!) For any defeated NPCs will add any experience and for all PCs in combat will add any gained experience.
 * **GM Experience Whisper** - Only Message the GM the experience gained.
-* **Skip Initiative Dialog** (PF2e Only!) Skip the Roll Initiative Dialog Box.
+* **PF2E Auto Initiative** (PF2e Only!) Change what method to roll initiatives, Default = System Default, Fast = Roll Perception for every NPC and PC no dialogs, Prompt = Present Dialogs to Players and GM to choose Initiative type, Fast/Prompt = Roll Perception for NPCs and Prompt Players.
 * **Remove Defeated NPCs?** - Will delete any of the defeated NPC tokens from the scene.
 * **Enable Combat Markers?** - (Only Available with Jules&Ben's Animated Assets and Sequencer Modules) Adds combat markers to current token and on deck token.
 
@@ -168,12 +168,34 @@ The Combat Markers will ignore any hidden token, if token becomes visible the an
 ### Pathfinder Second Edition - Skip Dialog
 Pathfinder has an additional setting available to it, when rolling for initiative the system will display a dialog:
 
-![PF2e Dialog](images/pf2e_init_dialog.png)
+![PF2e Settings](images/setting_pf2e.png)
 
-This setting will allow for skipping the dialog window from displaying for NPCs, PCs, or Both.
-* " " - The dialog will display for all NPCs and PCs
-* NPCs - The dialog will display for all PCs
-* PCs - The dialog will display for all NPCs
-* Both - There will be no dialog for both NPCs and PCs
+This setting will enable how initiatives will be automated
+* Default - The system default, will prompt the GM with a dialog to modify each roll.
+* Fast - All NPCs and PCs will be rolled with the default Perception initiative
+* Prompt - Will Prompt Both GM and Players to select an initiative type to roll
+* Fast/Prompt - Will Prompt the Players to select an initiatives type to roll and roll all NPCs with the default Perception initiative
 
-![PF2e Skip Dialog](images/setting_pf2e_skipdialog.png)
+#### Default
+With the Default Auto initiative setting, the GM will see the default prompts
+![PF2e Default](images/pf2e_default.png)
+
+#### Fast
+With the Fast Auto initiative setting, the GM and Players will see no prompt and every NPC and PC will roll Perception.
+![PF2e Fast](images/pf2e_fast.png)
+
+#### Prompt
+With the Prompt Auto initiative setting, the GM and Players will see a prompt asking for the initiative type to roll. If any player is not connected at the time, the roll prompt will go to the GM.
+
+Player view
+![PF2e Prompt Player View](images/pf2e_player_prmopt.png)
+
+GM View
+![PF2e Skip Dialog](images/pf2e_gm_prmopt.png)
+
+The GM has options to roll all of the NPCs as the same initiative type by selecting the `Group NPCs?` prompt. However the NPCs need to roll different initiatives unselecting that checkbox and setting each NPC initiative from the list below will make that NPC roll the selected initiative.
+
+![PF2e Prompt Options](images/initiative_options_dialog.png)
+
+#### Fast/Prompt
+With Fast/Prompt Auto initiative setting, it will roll all NPCs with the Perception initiative, and every Player will see a prompt asking for the initiative type to roll. If any player is not connected at the time, the roll prompt will go to the GM.
