@@ -16,10 +16,6 @@
 		"url": "https://github.com/veevelder/quick-combat"
 	  }
 	],
-	"relationships": {
-		"systems": [],
-		"requires": []
-	},
 	"esmodules": ["scripts/quick-combat.js"],
 	"scripts": [],
 	"styles": ["styles/quick-combat.css"],
@@ -40,6 +36,19 @@
 			"type": "Item"
 		}
 	],
+	"relationships": {
+		"requires": [
+			{
+				"id": "socketlib",
+				"type": "module",
+				"manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/develop/module.json",
+				"compatibility": {
+					"verified": "1.0.12"
+				}
+			}
+		]
+	},
+	"socket": true,
 	"url": "This is auto replaced",
 	"manifest": "This is auto replaced",
 	"download": "This is auto replaced",

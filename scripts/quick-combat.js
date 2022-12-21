@@ -1,3 +1,33 @@
+let socket;
+
+Hooks.once("socketlib.ready", () => {
+	socket = socketlib.registerModule("quick-combat");
+	socket.register("ask_initiative", ask_initiative);
+});
+
+async function ask_initiative(npc_options, actor_id) {
+	return new Promise((resolve, reject) => {
+		var actor = game.actors.get(actor_id)
+		new Dialog({
+			title: game.i18n.localize("QuickCombat.PF2E.title"),
+			content: `${actor.name}</br><select id='inits'>${npc_options}</select>`,
+			close: () => {reject()},
+			buttons: {
+				button: {
+					label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
+					icon: "<i class='fas fa-check'></i>",
+					callback: async (html) => {
+						var inits = html.find("select#inits").find(":selected").val()
+						console.debug(`quick-combat | updating ${actor.name} initiative to ${inits}`)
+						actor.update({"system.attributes.initiative.ability": inits})
+						resolve()
+					}
+				}
+			},
+		}).render(true);
+	})
+}
+
 export class QuickCombatPlaylists extends FormApplication {
 	constructor(object = {}, options) {
 		super(object, options);
@@ -131,6 +161,69 @@ function get_playlist(fanfare = false, pickone = false) {
 	}
 }
 
+async function render_combat(tokens) {
+	// rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
+	var combat = game.combats.viewed;
+	if (!combat) {
+		if (game.user.isGM) {
+			console.debug("quick-combat | creating new combat")
+			const cls = getDocumentClass("Combat");
+			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
+		} else {
+			ui.notifications.warn("COMBAT.NoneActive", {localize: true});
+			combat = null
+		}
+	}
+	if (combat != null) {
+		// Process each controlled token, as well as the reference token
+		console.debug("quick-combat | adding combatants to combat")
+		const createData = tokens.map(t => {
+			return {
+				tokenId: t.id,
+				sceneId: t.scene.id,
+				actorId: t.document.actorId,
+				hidden: t.document.hidden
+			}
+		});
+		await combat.createEmbeddedDocuments("Combatant", createData)
+	}
+	return combat
+}
+
+async function roll_combat(combat, system) {
+	var cmb = []
+	var npc_options = {}
+	var pc_options = {}
+	switch (system) {
+		case "pf2e":
+			var skipDialog = true
+			if (game.settings.get("quick-combat", "autoInit") == "default") {
+				skipDialog = false
+			}
+			cmb = combat.combatants.filter(a => a.actor.type == "character").filter(a => !a.initiative).map(a => a.id)
+			npc_options = {"secret": true, "skipDialog": skipDialog};
+			pc_options = {"secret": false, "skipDialog": skipDialog};
+			break;
+		default:
+			cmb = combat.combatants.filter(a => !a.isNPC).filter(a => !a.initiative).map(a => a.id)
+			npc_options = {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}}
+			pc_options = {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}}
+			break;
+	}
+
+	//add chat options for rolls should work with every system
+	console.log("quick-combat | rolling initiatives for NPCs", npc_options)
+	await combat.rollNPC(npc_options)
+	//check for PC roll option
+	if (!game.settings.get("quick-combat", "npcroll")) {
+		console.log("quick-combat | rolling initiatives for PCs", pc_options)
+		//roll all PCs that haven't rolled initiative yet
+		await combat.rollInitiative(cmb, pc_options)
+		console.log("quick-combat | starting combat")
+		await combat.startCombat();
+	}
+}
+
 async function hotkey() {
 	console.debug("quick-combat | combat hotkey pressed")
 	if (game.combat) {
@@ -147,61 +240,146 @@ async function hotkey() {
 			console.debug("quick-combat | getting player tokens skipping Pets/Summons")
 			var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0)
 
-			// rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
-			var combat = game.combats.viewed;
-			if (!combat) {
-				if (game.user.isGM) {
-					console.debug("quick-combat | creating new combat")
-					const cls = getDocumentClass("Combat");
-					combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
-				} else {
-					ui.notifications.warn("COMBAT.NoneActive", {localize: true});
-					return [];
+			//do system specific rolling options
+			if (CONFIG.hasOwnProperty("PF2E")) {
+				//render a popup box to ask for NPC and PC roll types
+				if (game.settings.get("quick-combat", "autoInit") == "prompt") {
+					console.log("quick-combat | pf2e rolling prompt initiatives")
+					//popup asking for initiative types before adding to combat tracker
+					var npc_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
+					var keys = Object.keys(CONFIG.PF2E.skills)
+					for (var i = 0; i < keys.length; i++) {
+						var key = keys[i]
+						npc_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skills[key])}</option>`
+					}
+
+					//create npc inputs
+					var npc_defaults = ""
+					for(var i = 0; i < tokens.length; i++) {
+						if (tokens[i].actor.type != "character") {
+							npc_defaults+=`<select id='inits_${tokens[i].actor.id}'>${npc_options}</select><label style='padding-left:10px' for='inits_${tokens[i].actor.id}'>${tokens[i].actor.name}</label></br>`
+						}
+					}
+					new Dialog({
+						title: "Update NPC Initiative",
+						content: `<label for='all_npcs'>${game.i18n.localize("QuickCombat.PF2E.groupMSG")}</label><input type='checkbox' id='all_npcs' checked><select id='inits'>${npc_options}</select>
+						<p class="notes">${game.i18n.localize("QuickCombat.PF2E.groupHint")}</p><hr>${npc_defaults}`,
+						close: async () => {
+							//get a list of connected users to send popup for for tokens in combat
+							//get a list of token/user combo thats not the GM
+							for (i = 0; i < tokens.length; i++) {
+								for (const user in tokens[i].actor.ownership) {
+									//not the default or GM and is owner
+									if (user != "default" && user != game.userId && tokens[i].actor.ownership[user] == 3) {
+										//check if user is connected if not prompt the GM
+										if (game.users.get(user).active) {
+											await socket.executeAsUser(ask_initiative, user, npc_options, tokens[i].actor.id)
+										}
+										else {
+											await socket.executeAsGM(ask_initiative, npc_options, tokens[i].actor.id)
+										}
+									}
+								}
+							}
+							var combat = await render_combat(tokens)
+							if (combat == null) {return}
+							roll_combat(combat, "pf2e")
+						},
+						buttons: {
+							button: {
+								label: "Update",
+								icon: "<i class='fas fa-check'></i>",
+								callback: async (html) => {
+									var inits = html.find("select#inits").find(":selected").val()
+									var all_npcs = html.find("input#all_npcs").prop("checked")
+									for(var i = 0; i < tokens.length; i++) {
+										if (tokens[i].actor.type != "character") {
+											//get init type if checkbox is enabled or not
+											if (!all_npcs) {
+												inits = html.find("select#inits_" + tokens[i].actor.id).find(":selected").val()
+											}
+											//update actors to match initiative
+											console.debug(`quick-combat | updating ${tokens[i].actor.name} initiative to ${inits}`)
+											tokens[i].actor.update({"system.attributes.initiative.ability": inits})
+										}
+									}
+								}
+							}
+						},
+					}).render(true);
+				}
+				else if (game.settings.get("quick-combat", "autoInit") == "fast_prompt") {
+					console.log("quick-combat | pf2e rolling fast_prompt initiatives")
+					for(var i = 0; i < tokens.length; i++) {
+						if (tokens[i].actor.type != "character" && tokens[i].actor.system.attributes.initiative.ability != "perception") {
+							//update actors to match initiative
+							console.debug(`quick-combat | updating ${tokens[i].actor.name} initiative to perception`)
+							tokens[i].actor.update({"system.attributes.initiative.ability": "perception"})
+						}
+					}
+					//popup asking for initiative types before adding to combat tracker
+					var npc_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
+					var keys = Object.keys(CONFIG.PF2E.skills)
+					for (var i = 0; i < keys.length; i++) {
+						var key = keys[i]
+						npc_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skills[key])}</option>`
+					}
+					//create npc inputs
+					var npc_defaults = ""
+					for(var i = 0; i < tokens.length; i++) {
+						if (tokens[i].actor.type != "character") {
+							npc_defaults+=`<select id='inits_${tokens[i].actor.id}'>${npc_options}</select><label style='padding-left:10px' for='inits_${tokens[i].actor.id}'>${tokens[i].actor.name}</label></br>`
+						}
+					}
+					for (i = 0; i < tokens.length; i++) {
+						for (const user in tokens[i].actor.ownership) {
+							//not the default or GM and is owner
+							if (user != "default" && user != game.userId && tokens[i].actor.ownership[user] == 3) {
+								//check if user is connected if not prompt the GM
+								if (game.users.get(user).active) {
+									await socket.executeAsUser(ask_initiative, user, npc_options, tokens[i].actor.id)
+								}
+								else {
+									await socket.executeAsGM(ask_initiative, npc_options, tokens[i].actor.id)
+								}
+							}
+						}
+					}
+					var combat = await render_combat(tokens)
+					if (combat == null) {return}
+					roll_combat(combat, "pf2e")
+				}
+				//assume perception for every token
+				else if (game.settings.get("quick-combat", "autoInit") == "fast") {
+					console.log("quick-combat | pf2e rolling fast initiatives")
+					for(var i = 0; i < tokens.length; i++) {
+						if (tokens[i].actor.system.attributes.initiative.ability != "perception") {
+							//update actors to match initiative
+							console.debug(`quick-combat | updating ${tokens[i].actor.name} initiative to perception`)
+							tokens[i].actor.update({"system.attributes.initiative.ability": "perception"})
+						}
+					}
+					var combat = await render_combat(tokens)
+					if (combat == null) {return}
+					roll_combat(combat, "pf2e")
+				}
+				//use system defaults
+				else {
+					console.log("quick-combat | pf2e rolling default initiatives")
+					var combat = await render_combat(tokens)
+					if (combat == null) {return}
+					roll_combat(combat, "pf2e")
 				}
 			}
-
-			// Process each controlled token, as well as the reference token
-			console.debug("quick-combat | adding combatants to combat")
-			const createData = tokens.map(t => {
-				return {
-					tokenId: t.id,
-					sceneId: t.scene.id,
-					actorId: t.document.actorId,
-					hidden: t.document.hidden
-				}
-			});
-			await combat.createEmbeddedDocuments("Combatant", createData)
-
-			//do system specific rolling options
-			if (CONFIG.hasOwnProperty("DND5E")) {
-				console.log("quick-combat | rolling initiatives for NPCs")
-				await combat.rollNPC({"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
-				//check for PC roll option
-				if (!game.settings.get("quick-combat", "npcroll")) {
-					console.log("quick-combat | rolling initiatives for PCs")
-					//roll all PCs that haven't rolled initiative yet
-					var cmb = combat.combatants.filter(a => a.actor.hasPlayerOwner).filter(a => !a.initiative).map(a => a.id)
-					await combat.rollInitiative(cmb, {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
-					console.log("quick-combat | starting combat")
-					await combat.startCombat();
-				}
+			else if (CONFIG.hasOwnProperty("DND5E")) {
+				var combat = await render_combat(tokens)
+				if (combat == null) {return}
+				roll_combat(combat, "dnd5e")
 			}
 			else if (CONFIG.hasOwnProperty("OSE")) {
 				console.debug("quick-combat | skipping combat rolling for OSE")
-			}
-			else if (CONFIG.hasOwnProperty("PF2E")) {
-				var skip_dialog = game.settings.get("quick-combat", "skipdialog")
-				console.log(`quick-combat | rolling initiatives for NPCs skipping dialog? ${skip_dialog}`)
-				await combat.rollNPC({"secret": true, "skipDialog":skip_dialog == "npc" || skip_dialog == "both"})
-				//check for PC roll option
-				if (!game.settings.get("quick-combat", "npcroll")) {
-					console.log("quick-combat | rolling initiatives for PCs")
-					//roll all PCs that haven't rolled initiative yet
-					var cmb = combat.combatants.filter(a => !a.isNPC).filter(a => !a.initiative).map(a => a.id)
-					await combat.rollInitiative(cmb, {"secret": false, "skipDialog":skip_dialog == "pcs" || skip_dialog == "both"})
-					console.log("quick-combat | starting combat")
-					await combat.startCombat();
-				}
+				var combat = await render_combat(tokens)
+				if (combat == null) {return}
 			}
 		}
 	}
@@ -305,18 +483,18 @@ Hooks.once("ready", () => {
 		default: false,
 		type: Boolean
 	});
-	game.settings.register("quick-combat", "skipdialog", {
-		name: "QuickCombat.SkipDialog",
-		hint: "QuickCombat.SkipDialogHint",
+	game.settings.register("quick-combat", "autoInit", {
+		name: "QuickCombat.PF2E.AutoInit",
+		hint: "QuickCombat.PF2E.AutoInitHint",
 		scope: "world",
 		config: CONFIG.hasOwnProperty("PF2E"),
 		type: String,
-		default: "",
+		default: "default",
 		choices: {
-			"none": "",
-			"npc": "Only NPCs",
-			"pcs": "Only PCs",
-			"both": "Both"
+			"default": "Default",
+			"fast": "Fast",
+			"prompt": "Prompt",
+			"fast_prompt": "Fast/Prompt"
 		}
 	});
 
@@ -358,13 +536,15 @@ Hooks.once("ready", () => {
 					"scene": "",
 					"fanfare": false
 				})
-				game.settings.set("quick-combat", "playlist", "")
-				migrated = true
 			}
+			game.settings.set("quick-combat", "playlist", "")
+			migrated = true
 		}
 	}
 	catch (error) {
-		//ignore migration error
+		console.error(`quick-combat | could not locate the matching playlists for ${old_playlist} ${error}`)
+		game.settings.set("quick-combat", "playlist", "")
+		migrated = true
 	}
 
 	try {
@@ -381,13 +561,15 @@ Hooks.once("ready", () => {
 					"scene": "",
 					"fanfare": false
 				})
-				game.settings.set("quick-combat", "boss-playlist", "")
-				migrated = true
 			}
+			game.settings.set("quick-combat", "boss-playlist", "")
+			migrated = true
 		}
 	}
 	catch (error) {
-		//ignore migration error
+		console.error(`quick-combat | could not locate the matching playlists for ${old_playlist} ${error}`)
+		game.settings.set("quick-combat", "playlist", "")
+		migrated = true
 	}
 
 	try {
@@ -404,13 +586,15 @@ Hooks.once("ready", () => {
 					"scene": "",
 					"fanfare": true
 				})
-				game.settings.set("quick-combat", "fanfare-playlist", "")
-				migrated = true
 			}
+			game.settings.set("quick-combat", "fanfare-playlist", "")
+			migrated = true
 		}
 	}
 	catch (error) {
-		//ignore migration error
+		console.error(`quick-combat | could not locate the matching playlists for ${old_playlist} ${error}`)
+		game.settings.set("quick-combat", "playlist", "")
+		migrated = true
 	}
 
 	if (migrated) {
@@ -420,7 +604,6 @@ Hooks.once("ready", () => {
 });
 
 async function start_playlist(playlist) {
-	console.log(playlist)
 	let playlists = []
 	//list old playlists
 	game.playlists.playing.forEach(function(playing) {
