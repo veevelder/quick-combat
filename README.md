@@ -182,15 +182,18 @@ With the Default Auto initiative setting, the GM will see the default prompts
 
 #### Fast
 With the Fast Auto initiative setting, the GM and Players will see no prompt and every NPC and PC will roll Perception.
+
 ![PF2e Fast](images/pf2e_fast.png)
 
 #### Prompt
 With the Prompt Auto initiative setting, the GM and Players will see a prompt asking for the initiative type to roll. If any player is not connected at the time, the roll prompt will go to the GM.
 
 Player view
+
 ![PF2e Prompt Player View](images/pf2e_player_prmopt.png)
 
 GM View
+
 ![PF2e Skip Dialog](images/pf2e_gm_prmopt.png)
 
 The GM has options to roll all of the NPCs as the same initiative type by selecting the `Group NPCs?` prompt. However the NPCs need to roll different initiatives unselecting that checkbox and setting each NPC initiative from the list below will make that NPC roll the selected initiative.
