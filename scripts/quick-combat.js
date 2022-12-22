@@ -268,16 +268,16 @@ async function hotkey() {
 							//get a list of connected users to send popup for for tokens in combat
 							//get a list of token/user combo thats not the GM
 							for (i = 0; i < tokens.length; i++) {
-								for (const user in tokens[i].actor.ownership) {
-									//not the default or GM and is owner
-									if (user != "default" && user != game.userId && tokens[i].actor.ownership[user] == 3) {
-										//check if user is connected if not prompt the GM
-										if (game.users.get(user).active) {
-											await socket.executeAsUser(ask_initiative, user, npc_options, tokens[i].actor.id)
-										}
-										else {
-											await socket.executeAsGM(ask_initiative, npc_options, tokens[i].actor.id)
-										}
+								//only run on PCs
+								if (tokens[i].actor.type == "character") {
+									//find the owner id thats not the default, not the GM and has OWNER privs
+									const user = Object.entries(tokens[i].actor.ownership).find(([k,v]) => k != "default" && k != game.userId && v == 3)
+									//check if user is connected if not prompt the GM
+									if (game.users.get(user)?.active) {
+										await socket.executeAsUser(ask_initiative, user, npc_options, tokens[i].actor.id)
+									}
+									else {
+										await socket.executeAsGM(ask_initiative, npc_options, tokens[i].actor.id)
 									}
 								}
 							}
