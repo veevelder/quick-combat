@@ -51,7 +51,7 @@
 	"QuickCombat.PF2E.AutoInit": "PF2E Auto Initiative",
 	"QuickCombat.PF2E.AutoInitHint": "Change what method to roll initiatives, Default = System Default, Fast = Roll Perception for every NPC and PC no dialogs, Prompt = Present Dialogs to Players and GM to choose Initiative type, Fast/Prompt = Roll Perception for NPCs and Prompt Players",
 	"QuickCombat.PF2E.title": "Update Initiative",
-	"QuickCombat.PF2E.updateButton": "Update",
+	"QuickCombat.PF2E.updateButton": "Roll for Initiative!",
 	"QuickCombat.PF2E.groupMSG": "Group NPCs?",
 	"QuickCombat.PF2E.groupHint": "Enable to Roll Initiative type for All NPCs"
 }

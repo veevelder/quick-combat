@@ -15,7 +15,7 @@ async function ask_initiative(npc_options, actor_id) {
 			buttons: {
 				button: {
 					label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
-					icon: "<i class='fas fa-check'></i>",
+					icon: "<i class='fa-solid fa-dice'></i>",
 					callback: async (html) => {
 						var inits = html.find("select#inits").find(":selected").val()
 						console.debug(`quick-combat | updating ${actor.name} initiative to ${inits}`)
@@ -287,8 +287,8 @@ async function hotkey() {
 						},
 						buttons: {
 							button: {
-								label: "Update",
-								icon: "<i class='fas fa-check'></i>",
+								label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
+								icon: "<i class='fa-solid fa-dice'></i>",
 								callback: async (html) => {
 									var inits = html.find("select#inits").find(":selected").val()
 									var all_npcs = html.find("input#all_npcs").prop("checked")
