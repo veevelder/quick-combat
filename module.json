@@ -3,50 +3,54 @@
 	"title": "Quick Combat",
 	"description": "Enhances the Combat Experience, starts Combat Playlist and adds Experience to PCs after combat.",
 	"version": "This is auto replaced",
-	"library": "false",
-	"manifestPlusVersion": "1.2.0",
 	"compatibility": {
-		"minimum": 10,
-		"verified": 10,
-		"maximum": 10
+	  "minimum": "10",
+	  "verified": "10",
+	  "maximum": "10"
 	},
 	"authors": [
 	  {
 		"name": "lostix",
-		"url": "https://github.com/veevelder/quick-combat"
+		"url": "https://github.com/veevelder/quick-combat",
+		"flags": {}
 	  }
 	],
-	"esmodules": ["scripts/quick-combat.js"],
-	"scripts": [],
-	"styles": ["styles/quick-combat.css"],
+	"esmodules": [
+	  "scripts/quick-combat.js"
+	],
+	"styles": [
+	  "styles/quick-combat.css"
+	],
 	"languages": [
-		{
-			"lang": "en",
-			"name": "English",
-			"path": "lang/en.json"
-		}
+	  {
+		"lang": "en",
+		"name": "English",
+		"path": "lang/en.json",
+		"flags": {}
+	  }
 	],
 	"packs": [
-		{
-			"name": "quick-combat-features",
-			"label": "Quick Combat Features",
-			"system": "dnd5e",
-			"path": "./packs/quick-combat-features.db",
-			"module": "quick-combat",
-			"type": "Item"
-		}
+	  {
+		"name": "quick-combat-features",
+		"label": "Quick Combat Features",
+		"system": "dnd5e",
+		"path": "packs/quick-combat-features.db",
+		"type": "Item",
+		"private": false,
+		"flags": {}
+	  }
 	],
 	"relationships": {
-		"requires": [
-			{
-				"id": "socketlib",
-				"type": "module",
-				"manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/develop/module.json",
-				"compatibility": {
-					"verified": "1.0.12"
-				}
-			}
-		]
+	  "requires": [
+		{
+		  "id": "socketlib",
+		  "type": "module",
+		  "manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/develop/module.json",
+		  "compatibility": {
+			"verified": "1.0.12"
+		  }
+		}
+	  ]
 	},
 	"socket": true,
 	"url": "This is auto replaced",
@@ -54,5 +58,4 @@
 	"download": "This is auto replaced",
 	"license": "LICENSE",
 	"readme": "README.md"
-}
-  
+  }
