@@ -48,25 +48,29 @@ export class pf2eCombat {
 		combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": true})
 	}
 
-	async rollInitiative(combatant, userId) {
+	async rollInitiative(combatant, userId) { 
+		//if combatant already has an initiative skip them
+		if (combatant.initiative) {
+			console.debug(`quick-combat | combatant ${combatant.name} already roll for initiative skipping`)
+			return
+		}
 		//render a popup box to ask for NPC and PC roll types
 		if (game.settings.get("quick-combat", "autoInit") == "prompt") {
 			//send prompts to PCs
-			if (combatant.actor.type == "character" && !game.settings.get("quick-combat", "npcroll")) {
+			if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
 				this.promptOwner(combatant, userId)
 			}
 			//ask group NPCs later before Combat is started
 		}
 		else if (game.settings.get("quick-combat", "autoInit") == "fast_prompt") {
 			//if combatant is an NPC
-			if (combatant.actor.type != "character") {
+			if (combatant.isNPC) {
 				console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
 				await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
-				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (combatant.actor.type == "character" && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
 				console.log(`quick-combat | pf2e rolling fast_prompt PC initiative for ${combatant.actor.name}`)
 				this.promptOwner(combatant, userId)
 			}
@@ -76,12 +80,12 @@ export class pf2eCombat {
 			console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
 			await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
 			//if combatant is an NPC
-			if (combatant.actor.type != "character") {
+			if (combatant.isNPC) {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (combatant.actor.type == "character" && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": true})
 			}	
@@ -90,12 +94,12 @@ export class pf2eCombat {
 		else {
 			console.log(`quick-combat | pf2e rolling default initiative for ${combatant.actor.name}`)
 			//if combatant is an NPC
-			if (combatant.actor.type != "character") {
+			if (combatant.isNPC) {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": false})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (combatant.actor.type == "character" && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": false})
 			}			
@@ -106,7 +110,12 @@ export class pf2eCombat {
 		//render a popup box to ask for NPC group roll types
 		if (game.settings.get("quick-combat", "autoInit") == "prompt") {
 			//get all npcs that don't have an initiative
-			var npcs = combat.combatants.filter(a => a.actor.type != "character").filter(a => a.initiative == null)
+			var npcs = combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null)
+			//if there are not NPCs to roll then skip
+			if(npcs.length == 0) {
+				console.log("quick-combat | no NPCs found to roll skipping")
+				return
+			}
 			console.log("quick-combat | pf2e rolling npc prompt initiatives", npcs)
 			//popup asking for initiative types before adding to combat tracker
 			var npc_defaults = ""

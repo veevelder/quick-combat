@@ -1,7 +1,12 @@
 //Dungeons and Dragons 5e Class/Functions
 export class dnd5eCombat {
 	rollInitiative(combatant, userId) {
-		console.log(`quick-combat | dnd5e rolling initiative for ${combatant.actor.name}`)
+		//check if combatant already has an initiative
+		if (combatant.initiative) {
+			console.debug(`quick-combat | combatant ${combatant.name} already has an initiative skipping`)
+			return
+		}
+		console.log(`quick-combat | dnd5e rolling initiative for ${combatant.name}`)
 		//if combatant is a NPC
 		if(combatant.isNPC) {
 			//combatant ==> combatant.id

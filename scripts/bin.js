@@ -59,7 +59,7 @@ export class PlaylistHandler {
 		}
 	}
 
-	get(fanfare = false, pickone = false) {
+	get(fanfare = false, pickOne = false) {
 		//get scene playlists
 		let scene = game.scenes.active.id
 		let playlists = []
@@ -74,7 +74,7 @@ export class PlaylistHandler {
 			return null
 		}
 		//get the playlist object
-		if (pickone) {
+		if (pickOne) {
 			//select a random playlist
 			return game.playlists.get(playlists[Math.floor(Math.random()*playlists.length)].id)
 		}
@@ -97,14 +97,20 @@ export async function hotkey() {
 		game.combat.endCombat();
 	}
 	else {
-		console.debug("quick-combat | starting combat")
 		//check if GM has any selected tokens
 		if (canvas.tokens.controlled.length === 0) {
 			ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
 		}
 		else {			
 			console.debug("quick-combat | getting player tokens skipping Pets/Summons")
-			var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0)
+			var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0).map(t => {
+				return {
+					tokenId: t.id,
+					sceneId: t.scene.id,
+					actorId: t.document.actorId,
+					hidden: t.document.hidden
+				}
+			});
 			//render combat
 			//rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
 			var combat = game.combats.viewed;
@@ -122,15 +128,7 @@ export async function hotkey() {
 			if (combat != null) {
 				// Process each controlled token, as well as the reference token
 				console.debug("quick-combat | adding combatants to combat")
-				const createData = tokens.map(t => {
-					return {
-						tokenId: t.id,
-						sceneId: t.scene.id,
-						actorId: t.document.actorId,
-						hidden: t.document.hidden
-					}
-				});
-				await combat.createEmbeddedDocuments("Combatant", createData)
+				await combat.createEmbeddedDocuments("Combatant", tokens)
 			}
 			//if no combat was created something went wrong and return
 			else {

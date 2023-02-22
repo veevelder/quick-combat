@@ -1,5 +1,6 @@
 import {PlaylistHandler} from './bin.js'
 import {hotkey} from './bin.js'
+import {genericCombat} from './generic.js'
 import {dnd5eCombat} from './dnd5e.js'
 import {pf2eCombat} from './pf2e.js'
 import {oseCombat} from './ose.js'
@@ -241,14 +242,30 @@ Hooks.once("ready", () => {
 		type: Boolean,
 	});
 
-	//combat markers animations
+	//combat markers animations checks for JB2A_DnD5e (free) or jb2a_patreon (paid) and sequencer are installed
 	game.settings.register("quick-combat", "combatMarkers", {
-		name: "QuickCombat.CombatMarkers",
-		hint: "QuickCombat.CombatMarkersHint",
+		name: "QuickCombat.CombatMarkers.Enable",
+		hint: "QuickCombat.CombatMarkers.EnableHint",
 		scope: "world",
-		config: (game.modules.get("JB2A_DnD5e")?.active ?? false) && (game.modules.get("sequencer")?.active ?? false),
+		config: ((game.modules.get("JB2A_DnD5e")?.active ?? false) || (game.modules.get("jb2a_patreon")?.active ?? false)) && (game.modules.get("sequencer")?.active ?? false),
 		default: false,
 		type: Boolean,
+	});
+	game.settings.register("quick-combat", "combatMarkers-onDeck", {
+		name: "QuickCombat.CombatMarkers.OnDeck",
+		hint: "QuickCombat.CombatMarkers.OnDeckHint",
+		scope: "world",
+		config: ((game.modules.get("JB2A_DnD5e")?.active ?? false) || (game.modules.get("jb2a_patreon")?.active ?? false)) && (game.modules.get("sequencer")?.active ?? false),
+		default: "jb2a.magic_signs.circle.01.abjuration",
+		type: String,
+	});
+	game.settings.register("quick-combat", "combatMarkers-activeTurn", {
+		name: "QuickCombat.CombatMarkers.ActiveTurn",
+		hint: "QuickCombat.CombatMarkers.ActiveTurnHint",
+		scope: "world",
+		config: ((game.modules.get("JB2A_DnD5e")?.active ?? false) || (game.modules.get("jb2a_patreon")?.active ?? false)) && (game.modules.get("sequencer")?.active ?? false),
+		default: "jb2a.magic_signs.circle.01.conjuration",
+		type: String,
 	});
 
 	//migrate playlists to new playlist menu
@@ -349,17 +366,17 @@ Hooks.once("ready", () => {
 	}
 	//for any other system
 	else {
-		system = null
+		system = new genericCombat()
 		console.warn("quick-combat | game system does not have any roll initiative options available")
 	}
 });
 
-//when a combatant is added to the combat tracker either preCreateCombatant or createCombatant
+//when a combatant is added to the combat tracker
 Hooks.on("createCombatant", async (combatant, update, userId) => {
-	//if not the GM or the current user id doesn't match the requesting user id skip it
-	if (!game.user.isGM || game.userId != userId)
+	//only run if the GM added combatant OR if the player added the combatant
+	if (game.userId != userId) {
 		return true
-	//if combatant doesn't have an initiative value then roll it
+	}
 	if (combatant.initiative)
 		return true
 
@@ -597,12 +614,15 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 			}
 			//add on deck animation if it doesn't already exist
 			if(Sequencer?.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
+				var onDeckFile = game.settings.get("quick-combat", "combatMarkers-onDeck")
 				new Sequence("quick-combat")
 					.effect()
-						.file("jb2a.magic_signs.circle.01.abjuration")
-						.attachTo(nextToken)
+						.file(onDeckFile)
+						.attachTo(nextToken, { bindVisibility: true, bindAlpha: true })
 						.scaleToObject(2)
-						.elevation(0)
+						.belowTokens()
+						.belowTiles()
+						.zIndex(-1)
 						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
@@ -611,18 +631,20 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
 						.name("onDeck")
 						.persist()
-						.playIf(!nextToken.document.hidden)
 					.play()
 			}
 			//add active turn if it doesn't already exist
 			const currentToken = canvas.tokens.get(combat.current.tokenId)
 			if(Sequencer?.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
+				var activeTurnFile = game.settings.get("quick-combat", "combatMarkers-activeTurn")
 				new Sequence("quick-combat")
 					.effect()
-						.file("jb2a.magic_signs.circle.01.conjuration")
-						.attachTo(currentToken)
+						.file(activeTurnFile)
+						.attachTo(currentToken, { bindVisibility: true, bindAlpha: true })
 						.scaleToObject(2)
-						.elevation(0)
+						.belowTokens()
+						.belowTiles()
+						.zIndex(-1)
 						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
@@ -631,7 +653,6 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
 						.name("activeTurn")
 						.persist()
-						.playIf(!currentToken.document.hidden)
 					.play()
 			}
 		}
