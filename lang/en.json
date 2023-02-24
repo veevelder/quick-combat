@@ -57,5 +57,6 @@
 	"QuickCombat.PF2E.title": "Update Initiative",
 	"QuickCombat.PF2E.updateButton": "Update",
 	"QuickCombat.PF2E.groupMSG": "Group NPCs?",
-	"QuickCombat.PF2E.groupHint": "Enable to Roll Initiative type for All NPCs"
+	"QuickCombat.PF2E.groupHint": "Enable to roll all NPCs with selected Initiative Type, Disable and for each listed NPC below select the Initiative Type.",
+	"QuickCombat.MLD.warning": "Quick Combat - Monk's Little Details setting option 'No Combat Without Initiative' is set, which can cause issues with how Quick Combat Works. It is suggested to disable that option before continuing."
 }

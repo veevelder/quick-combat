@@ -369,6 +369,14 @@ Hooks.once("ready", () => {
 		system = new genericCombat()
 		console.warn("quick-combat | game system does not have any roll initiative options available")
 	}
+
+	//check for monk's little details and see if no combat without initiative option has been selected
+	if(game.modules.get("monks-little-details")?.active ?? false) {
+		if (game.settings.get("monks-little-details", "prevent-initiative")) {
+			//set warning message
+			ui.notifications.warn(game.i18n.localize("QuickCombat.MLD.warning"));
+		}
+	}
 });
 
 //when a combatant is added to the combat tracker

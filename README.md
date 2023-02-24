@@ -202,3 +202,13 @@ The GM has options to roll all of the NPCs as the same initiative type by select
 
 #### Fast/Prompt
 With Fast/Prompt Auto initiative setting, it will roll all NPCs with the Perception initiative, and every Player will see a prompt asking for the initiative type to roll. If any player is not connected at the time, the roll prompt will go to the GM.
+
+
+# Known Issues
+
+## Monk's Little Details
+If you have [Monk's Little Details](https://github.com/ironmonk88/monks-little-details) mod installed there is an issue with PF2e and starting combat. When using Default, Prompt, or Fast/Prompt rolling options and if you have the `No Combat WIthout Initiative` option set it will not start combat and cause some issues with staring any combat playlist.
+
+![PF2e Prompt Options](images/monk_details_issue.png)
+
+To solve this, unselect the Monk's Little Details option, and everything will work as expected.
