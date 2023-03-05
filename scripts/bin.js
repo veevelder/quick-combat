@@ -62,21 +62,26 @@ export class PlaylistHandler {
 	get(fanfare = false, pickOne = false) {
 		//get scene playlists
 		let scene = game.scenes.active.id
+		console.debug(`quick-combat | getting playlist for scene ${scene} fanfare: ${fanfare} pickOne: ${pickOne}`)
 		let playlists = []
 		//get scene playlists
 		playlists = game.settings.get("quick-combat", "playlists").filter(a => a.scene == scene && a.fanfare == fanfare)
-		//if not scene playlists get all "" scenes
+		//if not scene playlists get all scenes
 		if (playlists.length == 0) {
+			console.debug("quick-combat | no scene playlist found looking for all scenes")
 			playlists = game.settings.get("quick-combat", "playlists").filter(a => a.scene == "" && a.fanfare == fanfare)
 		}
 		//if still no playlists then return None
 		if (playlists.length == 0) {
+			console.log("quick-combat | no eligible playlist was found")
 			return null
 		}
 		//get the playlist object
 		if (pickOne) {
 			//select a random playlist
-			return game.playlists.get(playlists[Math.floor(Math.random()*playlists.length)].id)
+			let a = game.playlists.get(playlists[Math.floor(Math.random()*playlists.length)].id)
+			console.debug(`quick-combat | picking single playlist ${a} from group`)
+			return a
 		}
 		else {
 			let a = []
@@ -84,6 +89,7 @@ export class PlaylistHandler {
 				var tmp = game.playlists.get(playlists[i].id)
 				a.push(tmp)
 			}
+			console.debug("quick-combat | all playlists", a)
 			return a
 		}
 	}

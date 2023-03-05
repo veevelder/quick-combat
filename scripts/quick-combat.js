@@ -369,14 +369,6 @@ Hooks.once("ready", () => {
 		system = new genericCombat()
 		console.warn("quick-combat | game system does not have any roll initiative options available")
 	}
-
-	//check for monk's little details and see if no combat without initiative option has been selected
-	if(game.modules.get("monks-little-details")?.active ?? false) {
-		if (game.settings.get("monks-little-details", "prevent-initiative")) {
-			//set warning message
-			ui.notifications.warn(game.i18n.localize("QuickCombat.MLD.warning"));
-		}
-	}
 });
 
 //when a combatant is added to the combat tracker
@@ -421,21 +413,26 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 			}
 		}
 		let qc_playlists = playlistHandler.get()
-		for (var i = 0; i < qc_playlists.length; i++) {
-			buttons[qc_playlists[i].id] = {
-				label: qc_playlists[i].name,
-				callback: (html, button) => {
-					var playlist = game.playlists.get($(button.currentTarget).data("button"))
-					playlistHandler.start(playlist)
-				},
-				icon:  qc_playlists[i].name.toLowerCase().includes("boss") ? `<i class="fas fa-skull-crossbones"></i>` : `<i class="fas fa-music"></i>`
-			}
-		}		
-		new Dialog({
-			title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
-			content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
-			buttons: buttons,
-		}).render(true);
+		if (qc_playlists) {
+			for (var i = 0; i < qc_playlists.length; i++) {
+				buttons[qc_playlists[i].id] = {
+					label: qc_playlists[i].name,
+					callback: (html, button) => {
+						var playlist = game.playlists.get($(button.currentTarget).data("button"))
+						playlistHandler.start(playlist)
+					},
+					icon:  qc_playlists[i].name.toLowerCase().includes("boss") ? `<i class="fas fa-skull-crossbones"></i>` : `<i class="fas fa-music"></i>`
+				}
+			}		
+			new Dialog({
+				title: game.i18n.localize("QuickCombat.PlaylistWindowTitle"),
+				content: game.i18n.localize("QuickCombat.PlaylistWindowDescription"),
+				buttons: buttons,
+			}).render(true);
+		}
+		else {
+			playlistHandler.start()
+		}
 	}
 	else {
 		console.debug("quick-combat | skipping choose playlist dialog")
@@ -603,66 +600,63 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 })
 
 Hooks.on("updateCombat", async (combat, updates, diff, id) => {
-	//only run for the GM
-	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM)) {
-		// check if theres a combat
-		if(combat?.active) {
-			//remove activeTurn/onDeck on previous source should have not animations
-			Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
-			Sequencer?.EffectManager.endEffects({ name: "onDeck" })
-			//get the next non defeated token
-			var nextToken = null
-			var i = 1
-			while (nextToken == null) {
-				var tmp = combat.turns[(game.combats.active.turn + i) % game.combats.active.turns.length]
-				if (!tmp.defeated) {
-					nextToken = canvas.tokens.get(tmp.tokenId)
-				}
-				i += 1
+	//only run for the GM and make sure the Sequencer is available check if theres a combat
+	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM) && typeof Sequencer !== "undefined" && combat?.active) {
+		//remove activeTurn/onDeck on previous source should have not animations
+		Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
+		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
+		//get the next non defeated token
+		var nextToken = null
+		var i = 1
+		while (nextToken == null) {
+			var tmp = combat.turns[(game.combats.active.turn + i) % game.combats.active.turns.length]
+			if (!tmp.defeated) {
+				nextToken = canvas.tokens.get(tmp.tokenId)
 			}
-			//add on deck animation if it doesn't already exist
-			if(Sequencer?.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
-				var onDeckFile = game.settings.get("quick-combat", "combatMarkers-onDeck")
-				new Sequence("quick-combat")
-					.effect()
-						.file(onDeckFile)
-						.attachTo(nextToken, { bindVisibility: true, bindAlpha: true })
-						.scaleToObject(2)
-						.belowTokens()
-						.belowTiles()
-						.zIndex(-1)
-						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
-						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
-						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
-						.rotateOut(90, 2500, {ease: "easeInOutCubic"})
-						.scaleIn(2, 2500, {ease: "easeInOutCubic"})
-						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
-						.name("onDeck")
-						.persist()
-					.play()
-			}
-			//add active turn if it doesn't already exist
-			const currentToken = canvas.tokens.get(combat.current.tokenId)
-			if(Sequencer?.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
-				var activeTurnFile = game.settings.get("quick-combat", "combatMarkers-activeTurn")
-				new Sequence("quick-combat")
-					.effect()
-						.file(activeTurnFile)
-						.attachTo(currentToken, { bindVisibility: true, bindAlpha: true })
-						.scaleToObject(2)
-						.belowTokens()
-						.belowTiles()
-						.zIndex(-1)
-						.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
-						.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
-						.rotateIn(90, 2500, {ease: "easeInOutCubic"})
-						.rotateOut(90, 2500, {ease: "easeInOutCubic"})
-						.scaleIn(2, 2500, {ease: "easeInOutCubic"})
-						.scaleOut(2, 2500, {ease: "easeInOutCubic"})
-						.name("activeTurn")
-						.persist()
-					.play()
-			}
+			i += 1
+		}
+		//add on deck animation if it doesn't already exist
+		if(Sequencer?.EffectManager.getEffects({ source: nextToken, name: "onDeck" }).length == 0 ) {
+			var onDeckFile = game.settings.get("quick-combat", "combatMarkers-onDeck")
+			new Sequence("quick-combat")
+				.effect()
+					.file(onDeckFile)
+					.attachTo(nextToken, { bindVisibility: true, bindAlpha: true })
+					.scaleToObject(2)
+					.belowTokens()
+					.belowTiles()
+					.zIndex(-1)
+					.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+					.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
+					.rotateIn(90, 2500, {ease: "easeInOutCubic"})
+					.rotateOut(90, 2500, {ease: "easeInOutCubic"})
+					.scaleIn(2, 2500, {ease: "easeInOutCubic"})
+					.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+					.name("onDeck")
+					.persist()
+				.play()
+		}
+		//add active turn if it doesn't already exist
+		const currentToken = canvas.tokens.get(combat.current.tokenId)
+		if(Sequencer?.EffectManager.getEffects({ source: currentToken, name: "activeTurn" }).length == 0 ) {
+			var activeTurnFile = game.settings.get("quick-combat", "combatMarkers-activeTurn")
+			new Sequence("quick-combat")
+				.effect()
+					.file(activeTurnFile)
+					.attachTo(currentToken, { bindVisibility: true, bindAlpha: true })
+					.scaleToObject(2)
+					.belowTokens()
+					.belowTiles()
+					.zIndex(-1)
+					.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
+					.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
+					.rotateIn(90, 2500, {ease: "easeInOutCubic"})
+					.rotateOut(90, 2500, {ease: "easeInOutCubic"})
+					.scaleIn(2, 2500, {ease: "easeInOutCubic"})
+					.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+					.name("activeTurn")
+					.persist()
+				.play()
 		}
 	}
 })
