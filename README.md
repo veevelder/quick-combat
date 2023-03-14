@@ -102,6 +102,8 @@ Will remove all combatants, and if experience tracking was enabled (for the avai
 
 Open the Quick Combat Playlist window to configure any number of playlists.
 * If you have multiple playlists defined for any scene or no scenes it is recommend to enable the Choose Playlist option. Otherwise a random playlist will be chosen to start when combat starts.
+* Make sure you configure your playlists to be either in Sequential or Shuffle Tracks playback mode.
+* See [Foundry VTT Playlists](https://foundryvtt.com/article/playlists/) for more information.
 
 ![Quick Combat Background Playlist](images/playlist.png)
 
