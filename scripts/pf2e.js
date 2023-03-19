@@ -57,20 +57,20 @@ export class pf2eCombat {
 		//render a popup box to ask for NPC and PC roll types
 		if (game.settings.get("quick-combat", "autoInit") == "prompt") {
 			//send prompts to PCs
-			if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
+			if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
 				this.promptOwner(combatant, userId)
 			}
 			//ask group NPCs later before Combat is started
 		}
 		else if (game.settings.get("quick-combat", "autoInit") == "fast_prompt") {
 			//if combatant is an NPC
-			if (combatant.isNPC) {
+			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 				console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
 				await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
 				console.log(`quick-combat | pf2e rolling fast_prompt PC initiative for ${combatant.actor.name}`)
 				this.promptOwner(combatant, userId)
 			}
@@ -80,12 +80,12 @@ export class pf2eCombat {
 			console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
 			await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
 			//if combatant is an NPC
-			if (combatant.isNPC) {
+			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": true})
 			}	
@@ -94,12 +94,12 @@ export class pf2eCombat {
 		else {
 			console.log(`quick-combat | pf2e rolling default initiative for ${combatant.actor.name}`)
 			//if combatant is an NPC
-			if (combatant.isNPC) {
+			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": false})
 			}
 			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
+			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
 				//combatant ==> combatant.id
 				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": false})
 			}			

@@ -6,6 +6,8 @@
 
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
+ * **NEW Feature!** Added Macro Support to Add Tokens to Combat, Start and Stop Combat.
+ * **NEW Feature!** Added more settings to NOT roll any initiative for any token. This will enable to mod to just start/stop playlists.
  * **NEW Feature!** You can now define any number of playlists Combat/Boss/Mini Boss whatever fits your needs. Works best with the `Choose Playlist Settings. You can even define playlists for specific scenes!
  * **NOTE*** The module will make its best attempt to migrate the old playlist settings over to the new system. You should make sure your playlists are setup correctly
 
@@ -25,6 +27,8 @@ This module has been tested with the systems listed below. Plan is to make it av
 * [D&D 5e](https://gitlab.com/foundrynet/dnd5e)
 * [OSE](https://github.com/vttred/ose)
 * [PF2e](https://github.com/foundryvtt/pf2e/)
+
+[How To Use Quick Combat]() Has been moved to the Wiki.
 
 ## How To Use Quick Combat
 
@@ -102,8 +106,6 @@ Will remove all combatants, and if experience tracking was enabled (for the avai
 
 Open the Quick Combat Playlist window to configure any number of playlists.
 * If you have multiple playlists defined for any scene or no scenes it is recommend to enable the Choose Playlist option. Otherwise a random playlist will be chosen to start when combat starts.
-* Make sure you configure your playlists to be either in Sequential or Shuffle Tracks playback mode.
-* See [Foundry VTT Playlists](https://foundryvtt.com/article/playlists/) for more information.
 
 ![Quick Combat Background Playlist](images/playlist.png)
 
@@ -206,11 +208,10 @@ The GM has options to roll all of the NPCs as the same initiative type by select
 With Fast/Prompt Auto initiative setting, it will roll all NPCs with the Perception initiative, and every Player will see a prompt asking for the initiative type to roll. If any player is not connected at the time, the roll prompt will go to the GM.
 
 
-# Known Issues
-
-## Monk's Little Details
-If you have [Monk's Little Details](https://github.com/ironmonk88/monks-little-details) mod installed there is an issue with PF2e and starting combat. When using Default, Prompt, or Fast/Prompt rolling options and if you have the `No Combat WIthout Initiative` option set it will not start combat and cause some issues with staring any combat playlist.
-
-![PF2e Prompt Options](images/monk_details_issue.png)
-
-To solve this, unselect the Monk's Little Details option, and everything will work as expected.
+## Macro Support
+### Adding Players to the Combat Tracker
+`QuickCombat.addPlayers()`
+### Starting Combat
+`QuickCombat.startCombat()`
+### Ending Combat
+`QuickCombat.endCombat()`

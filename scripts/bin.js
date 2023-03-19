@@ -95,58 +95,73 @@ export class PlaylistHandler {
 	}
 }
 
+export async function addPlayers() {
+	//check if GM has any selected tokens
+	if (canvas.tokens.controlled.length === 0) {
+		ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+		return false
+	}		
+	console.debug("quick-combat | getting player tokens skipping Pets/Summons")
+	var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0).map(t => {
+		return {
+			tokenId: t.id,
+			sceneId: t.scene.id,
+			actorId: t.document.actorId,
+			hidden: t.document.hidden
+		}
+	});
+	//render combat
+	//rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
+	var combat = game.combats.viewed;
+	if (!combat) {
+		if (game.user.isGM) {
+			console.debug("quick-combat | creating new combat")
+			const cls = getDocumentClass("Combat");
+			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
+		} else {
+			ui.notifications.warn("COMBAT.NoneActive", {localize: true});
+			combat = null
+		}
+	}
+	//if there is a combat created
+	if (combat != null) {
+		// Process each controlled token, as well as the reference token
+		console.debug("quick-combat | adding combatants to combat")
+		await combat.createEmbeddedDocuments("Combatant", tokens)
+	}
+	//if no combat was created something went wrong and return
+	else {
+		return false
+	}
+	return true
+}
+
+export async function startCombat() {
+	//start the combat as long as its not OSE
+	if (CONFIG.hasOwnProperty("OSE")) {
+		console.debug("quick-combat | skipping combat start for OSE")
+		return
+	}
+	console.log("quick-combat | starting combat")
+	await game.combat.startCombat();
+}
+
+export async function endCombat() {
+	console.debug("quick-combat | combat found stopping combat")
+	game.combat.endCombat();
+}
+
 //if hotkey was pressed create combat, add combatants, start combat
 export async function hotkey() {
 	console.debug("quick-combat | combat hotkey pressed")
 	if (game.combat) {
-		console.debug("quick-combat | combat found stopping combat")
-		game.combat.endCombat();
+		endCombat()
 	}
 	else {
-		//check if GM has any selected tokens
-		if (canvas.tokens.controlled.length === 0) {
-			ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
+		if (!await addPlayers()) {
+			console.log("quick-combat | something went wrong adding tokens to combat tracker")
+			return
 		}
-		else {			
-			console.debug("quick-combat | getting player tokens skipping Pets/Summons")
-			var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0).map(t => {
-				return {
-					tokenId: t.id,
-					sceneId: t.scene.id,
-					actorId: t.document.actorId,
-					hidden: t.document.hidden
-				}
-			});
-			//render combat
-			//rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
-			var combat = game.combats.viewed;
-			if (!combat) {
-				if (game.user.isGM) {
-					console.debug("quick-combat | creating new combat")
-					const cls = getDocumentClass("Combat");
-					combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
-				} else {
-					ui.notifications.warn("COMBAT.NoneActive", {localize: true});
-					combat = null
-				}
-			}
-			//if there is a combat created
-			if (combat != null) {
-				// Process each controlled token, as well as the reference token
-				console.debug("quick-combat | adding combatants to combat")
-				await combat.createEmbeddedDocuments("Combatant", tokens)
-			}
-			//if no combat was created something went wrong and return
-			else {
-				return
-			}
-			//start the combat as long as its not OSE
-			if (CONFIG.hasOwnProperty("OSE")) {
-				console.debug("quick-combat | skipping combat start for OSE")
-				return
-			}
-			console.log("quick-combat | starting combat")
-			await combat.startCombat();
-		}
+		await startCombat()
 	}
 }

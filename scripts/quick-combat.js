@@ -1,4 +1,4 @@
-import {PlaylistHandler} from './bin.js'
+import {addPlayers, startCombat, endCombat, PlaylistHandler} from './bin.js'
 import {hotkey} from './bin.js'
 import {genericCombat} from './generic.js'
 import {dnd5eCombat} from './dnd5e.js'
@@ -64,13 +64,24 @@ export class QuickCombatPlaylists extends FormApplication {
 		const data = expandObject(formData);
 		let playlists = []
 		for (let [key, value] of Object.entries(data)) {
-			if (value.name == "") {
-				ui.notifications.error(game.i18n.localize("QuickCombat.SaveNameError"));
-				return;
-			}
-			if (value.playlist == "") {
+			if (value.id == "") {
 				ui.notifications.error(game.i18n.localize("QuickCombat.SavePlaylistError"));
 				return;
+			}
+			//check if playlist is set correctly
+			if (value.fanfare) {
+				var playlist = game.playlists.get(value.id)
+				if (playlist.mode != CONST.PLAYLIST_MODES.DISABLED) {
+					ui.notifications.error(playlist.name + " " + game.i18n.localize("QuickCombat.SaveFanfareError"));
+					return
+				}
+			}
+			else {
+				var playlist = game.playlists.get(value.id)
+				if (playlist.mode == CONST.PLAYLIST_MODES.DISABLED) {
+					ui.notifications.error(playlist.name + " " + game.i18n.localize("QuickCombat.SavePlaylistTypeError"));
+					return
+				}
 			}
 			playlists.push(value)
 		}
@@ -94,7 +105,7 @@ export class QuickCombatPlaylists extends FormApplication {
 			"fanfare": false
 		})
 		await game.settings.set("quick-combat", "playlists", playlists)
-		this.render();
+		await this.render();
 	}
 
 	async _onRemovePlaylist(event) {
@@ -107,7 +118,7 @@ export class QuickCombatPlaylists extends FormApplication {
 		playlists.splice(el.data("idx"), 1);
 		await game.settings.set("quick-combat", "playlists", playlists)
 		el.remove();
-		this.render();
+		await this.render();
 	}
 }
 
@@ -127,6 +138,24 @@ Hooks.on("init", () => {
 //setup game settings and migrate old settings to new ones
 Hooks.once("ready", () => {
 	console.debug("quick-combat | register settings")
+
+	//set factory for pf2e
+	if (CONFIG.hasOwnProperty("PF2E")) {
+		system = new pf2eCombat()
+	}
+	//set factory for D&D 5e system
+	else if (CONFIG.hasOwnProperty("DND5E")) {
+		system = new dnd5eCombat()
+	}
+	//set factory for OSE system
+	else if (CONFIG.hasOwnProperty("OSE")) {
+		system = new oseCombat()
+	}
+	//for any other system
+	else {
+		system = new genericCombat()
+	}
+
 	//!!!!old settings TO BE REMOVED AT A LATER DATE!!!!
 	game.settings.register("quick-combat", "playlist", {
 		scope: "world",
@@ -145,6 +174,12 @@ Hooks.once("ready", () => {
 		config: false,
 		type: String,
 		default: ""
+	});
+	game.settings.register("quick-combat", "npcroll", {
+		scope: "world",
+		config: false,
+		default: false,
+		type: Boolean
 	});
 
 	//playlist options
@@ -172,6 +207,22 @@ Hooks.once("ready", () => {
 		type: Object
 	})
 
+	//initiative options
+	game.settings.register("quick-combat", "initiative", {
+		name: "QuickCombat.Initiative",
+		hint: "QuickCombat.InitiativeHint",
+		scope: "world",
+		config: CONFIG.hasOwnProperty("OSE") ? false : true,
+		default: CONFIG.hasOwnProperty("OSE") ? "disabled" : "enabled",
+		type: String,
+		choices: {
+			"enabled": "Enabled",
+			"disabled": "Disabled",
+			"npc": "NPC Only",
+			"pc": "PC Only"
+		}
+	})
+
 	//hidden settings
 	game.settings.register("quick-combat", "oldPlaylist", {
 		scope: "world",
@@ -191,16 +242,8 @@ Hooks.once("ready", () => {
 		default: "",
 		type: String
 	});
-
+	
 	//game system specific options
-	game.settings.register("quick-combat", "npcroll", {
-		name: "QuickCombat.NPCRoll",
-		hint: "QuickCombat.NPCRollHint",
-		scope: "world",
-		config: !CONFIG.hasOwnProperty("OSE"),
-		default: false,
-		type: Boolean
-	});
 	game.settings.register("quick-combat", "exp", {
 		name: "QuickCombat.Exp",
 		hint: "QuickCombat.ExpHint",
@@ -217,6 +260,7 @@ Hooks.once("ready", () => {
 		default: false,
 		type: Boolean
 	});
+
 	game.settings.register("quick-combat", "autoInit", {
 		name: "QuickCombat.PF2E.AutoInit",
 		hint: "QuickCombat.PF2E.AutoInitHint",
@@ -267,6 +311,14 @@ Hooks.once("ready", () => {
 		default: "jb2a.magic_signs.circle.01.conjuration",
 		type: String,
 	});
+
+	//migrate the NPC rolling option
+	var npc_roll = game.settings.get("quick-combat", "npcroll")
+	if (npc_roll) {
+		console.debug("quick-combat | migrating old NPC Rolling setting to new initiative setting npc")
+		game.settings.set("quick-combat", "initiative", "npc")
+		game.settings.set("quick-combat", "npcroll", false)
+	}
 
 	//migrate playlists to new playlist menu
 	var qc_playlists = game.settings.get("quick-combat", "playlists")
@@ -351,24 +403,6 @@ Hooks.once("ready", () => {
 		game.settings.set("quick-combat", "playlists", qc_playlists)
 		ui.notifications.warn(game.i18n.localize("QuickCombat.MigrationMessage"));
 	}
-
-	//set factory for pf2e
-	if (CONFIG.hasOwnProperty("PF2E")) {
-		system = new pf2eCombat()
-	}
-	//set factory for D&D 5e system
-	else if (CONFIG.hasOwnProperty("DND5E")) {
-		system = new dnd5eCombat()
-	}
-	//set factory for OSE system
-	else if (CONFIG.hasOwnProperty("OSE")) {
-		system = new oseCombat()
-	}
-	//for any other system
-	else {
-		system = new genericCombat()
-		console.warn("quick-combat | game system does not have any roll initiative options available")
-	}
 });
 
 //when a combatant is added to the combat tracker
@@ -380,13 +414,16 @@ Hooks.on("createCombatant", async (combatant, update, userId) => {
 	if (combatant.initiative)
 		return true
 
-	//do system specific rolling options
-	if (system) {
-		system.rollInitiative(combatant, userId)
-	}
-	//for any other system
-	else {
-		console.warn("quick-combat | game system does not have any roll initiative options available")
+	//check if initiative option is set
+	if(game.settings.get("quick-combat", "initiative") != "disabled") {
+		//do system specific rolling options
+		if (system) {
+			system.rollInitiative(combatant, userId)
+		}
+		//for any other system
+		else {
+			console.warn("quick-combat | game system does not have any roll initiative options available")
+		}
 	}
 })
 
@@ -400,7 +437,9 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 
 	//ask for NPC rolls for PF2e
 	if (CONFIG.hasOwnProperty("PF2E") && system) {
-		system.rollNPCInitiatives(combat)
+		if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
+			system.rollNPCInitiatives(combat)
+		}
 	}
 
 	if (game.settings.get("quick-combat", "chooseplaylist")) {
@@ -655,4 +694,15 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 				.play()
 		}
 	}
+})
+
+Hooks.once("setup", function() {
+	console.debug("quick-combat | running setup hooks")
+	var operations = {
+		addPlayers: addPlayers,
+		startCombat: startCombat,
+		endCombat: endCombat
+	}
+	game.QuickCombat = operations;
+	window.QuickCombat = operations;
 })

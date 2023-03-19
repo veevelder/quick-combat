@@ -8,12 +8,12 @@ export class dnd5eCombat {
 		}
 		console.log(`quick-combat | dnd5e rolling initiative for ${combatant.name}`)
 		//if combatant is a NPC
-		if(combatant.isNPC) {
+		if(combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 			//combatant ==> combatant.id
 			combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
 		}
 		//if PC and npcroll is not set
-		else if (!combatant.isNPC && !game.settings.get("quick-combat", "npcroll")) {
+		else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
 			//combatant ==> combatant.id
 			combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
 		}
