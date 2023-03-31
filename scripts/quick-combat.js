@@ -5,7 +5,8 @@ import {dnd5eCombat} from './dnd5e.js'
 import {pf2eCombat} from './pf2e.js'
 import {oseCombat} from './ose.js'
 
-let system = null;
+let NEXT_TURN_HIT = false;
+let SYSTEM = null;
 const playlistHandler = new PlaylistHandler()
 
 export class QuickCombatPlaylists extends FormApplication {
@@ -141,19 +142,19 @@ Hooks.once("ready", () => {
 
 	//set factory for pf2e
 	if (CONFIG.hasOwnProperty("PF2E")) {
-		system = new pf2eCombat()
+		SYSTEM = new pf2eCombat()
 	}
 	//set factory for D&D 5e system
 	else if (CONFIG.hasOwnProperty("DND5E")) {
-		system = new dnd5eCombat()
+		SYSTEM = new dnd5eCombat()
 	}
 	//set factory for OSE system
 	else if (CONFIG.hasOwnProperty("OSE")) {
-		system = new oseCombat()
+		SYSTEM = new oseCombat()
 	}
 	//for any other system
 	else {
-		system = new genericCombat()
+		SYSTEM = new genericCombat()
 	}
 
 	//!!!!old settings TO BE REMOVED AT A LATER DATE!!!!
@@ -311,6 +312,19 @@ Hooks.once("ready", () => {
 		default: "jb2a.magic_signs.circle.01.conjuration",
 		type: String,
 	});
+	game.settings.register("quick-combat", "combatMarkerScale", {
+		name: "QuickCombat.CombatMarkers.Scale",
+		hint: "QuickCombat.CombatMarkers.ScaleHint",
+		scope: "world",
+		config: ((game.modules.get("JB2A_DnD5e")?.active ?? false) || (game.modules.get("jb2a_patreon")?.active ?? false)) && (game.modules.get("sequencer")?.active ?? false),
+		default: 2,
+		type: Number,
+		range: {
+			min: 1,
+			max: 4,
+			step: 0.1
+		}
+	})
 
 	//migrate the NPC rolling option
 	var npc_roll = game.settings.get("quick-combat", "npcroll")
@@ -417,8 +431,8 @@ Hooks.on("createCombatant", async (combatant, update, userId) => {
 	//check if initiative option is set
 	if(game.settings.get("quick-combat", "initiative") != "disabled") {
 		//do system specific rolling options
-		if (system) {
-			system.rollInitiative(combatant, userId)
+		if (SYSTEM) {
+			SYSTEM.rollInitiative(combatant, userId)
 		}
 		//for any other system
 		else {
@@ -436,9 +450,9 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 	console.debug("quick-combat | triggering start combat functions")
 
 	//ask for NPC rolls for PF2e
-	if (CONFIG.hasOwnProperty("PF2E") && system) {
+	if (CONFIG.hasOwnProperty("PF2E") && SYSTEM) {
 		if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
-			system.rollNPCInitiatives(combat)
+			SYSTEM.rollNPCInitiatives(combat)
 		}
 	}
 
@@ -483,6 +497,8 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (!game.user.isGM)
 		return true;
+	//reset start combat stuff
+	NEXT_TURN_HIT = false
 	console.debug("quick-combat | triggering delete combatant functions")
 	//remove any effects
 	if (game.modules.get("sequencer")?.active ?? false) {
@@ -491,8 +507,8 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
 	}
 	//if a system was defined and if track exp setting was set
-	if (system && game.settings.get("quick-combat", "exp")) {
-		system.awardEXP(combat, userId)
+	if (SYSTEM && game.settings.get("quick-combat", "exp")) {
+		SYSTEM.awardEXP(combat, userId)
 	}
 	//remove defeated npc tokens
 	if (game.settings.get("quick-combat", "rmDefeated")) {
@@ -639,11 +655,23 @@ Hooks.on("renderChatMessage", (message, html, data) => {
 })
 
 Hooks.on("updateCombat", async (combat, updates, diff, id) => {
+	//if not the GM and combat is not active (which should never be false here)
+	if (!game.user.isGM && !combat?.active) {
+		return
+	}
+	//if the next turn hook hasn't been hit yet and its in combat round 1 and turn is not 0 then set it as 0
+	if (!NEXT_TURN_HIT && combat.round == 1 && combat.turn != 0) {
+		console.log("quick-combat | update turn order")
+		await combat.update({turn:0})
+	}
+	console.log("quick-combat | adding combat markers")
 	//only run for the GM and make sure the Sequencer is available check if theres a combat
-	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM) && typeof Sequencer !== "undefined" && combat?.active) {
+	if(game.settings.get("quick-combat", "combatMarkers") && typeof Sequencer !== "undefined") {
 		//remove activeTurn/onDeck on previous source should have not animations
 		Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
 		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
+		//get the size of the combat marker
+		const scale = game.settings.get("quick-combat", "combatMarkerScale")
 		//get the next non defeated token
 		var nextToken = null
 		var i = 1
@@ -661,14 +689,14 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 				.effect()
 					.file(onDeckFile)
 					.attachTo(nextToken, { bindVisibility: true, bindAlpha: true })
-					.scaleToObject(2)
+					.scaleToObject(scale)
 					.belowTokens()
 					.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 					.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 					.rotateIn(90, 2500, {ease: "easeInOutCubic"})
 					.rotateOut(90, 2500, {ease: "easeInOutCubic"})
-					.scaleIn(2, 2500, {ease: "easeInOutCubic"})
-					.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+					.scaleIn(0, 2500, {ease: "easeInOutCubic"})
+					.scaleOut(0, 2500, {ease: "easeInOutCubic"})
 					.name("onDeck")
 					.persist()
 				.play()
@@ -681,19 +709,23 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 				.effect()
 					.file(activeTurnFile)
 					.attachTo(currentToken, { bindVisibility: true, bindAlpha: true })
-					.scaleToObject(2)
+					.scaleToObject(scale)
 					.belowTokens()
 					.fadeIn(1500, {ease: "easeOutCubic", delay: 500})
 					.fadeOut(1500, {ease: "easeOutCubic", delay: 500})
 					.rotateIn(90, 2500, {ease: "easeInOutCubic"})
 					.rotateOut(90, 2500, {ease: "easeInOutCubic"})
-					.scaleIn(2, 2500, {ease: "easeInOutCubic"})
-					.scaleOut(2, 2500, {ease: "easeInOutCubic"})
+					.scaleIn(0, 2500, {ease: "easeInOutCubic"})
+					.scaleOut(0, 2500, {ease: "easeInOutCubic"})
 					.name("activeTurn")
 					.persist()
 				.play()
 		}
 	}
+})
+
+Hooks.on("combatTurn", function() {
+	NEXT_TURN_HIT = true
 })
 
 Hooks.once("setup", function() {

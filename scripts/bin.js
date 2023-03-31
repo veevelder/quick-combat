@@ -162,6 +162,7 @@ export async function hotkey() {
 			console.log("quick-combat | something went wrong adding tokens to combat tracker")
 			return
 		}
+		console.log("quick-combat | done adding players")
 		await startCombat()
 	}
 }
