@@ -662,11 +662,13 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 	//if the next turn hook hasn't been hit yet and its in combat round 1 and turn is not 0 then set it as 0
 	if (!NEXT_TURN_HIT && combat.round == 1 && combat.turn != 0) {
 		console.log("quick-combat | update turn order")
+		NEXT_TURN_HIT = true
 		await combat.update({turn:0})
 	}
-	console.log("quick-combat | adding combat markers")
+	
 	//only run for the GM and make sure the Sequencer is available check if theres a combat
-	if(game.settings.get("quick-combat", "combatMarkers") && typeof Sequencer !== "undefined") {
+	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM) && typeof Sequencer !== "undefined" && combat?.active) {
+		console.debug("quick-combat | adding combat markers")
 		//remove activeTurn/onDeck on previous source should have not animations
 		Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
 		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
@@ -725,6 +727,10 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 })
 
 Hooks.on("combatTurn", function() {
+	//if not the GM
+	if (!game.user.isGM) {
+		return
+	}
 	NEXT_TURN_HIT = true
 })
 
