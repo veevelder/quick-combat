@@ -5,7 +5,6 @@ import {dnd5eCombat} from './dnd5e.js'
 import {pf2eCombat} from './pf2e.js'
 import {oseCombat} from './ose.js'
 
-let NEXT_TURN_HIT = false;
 let SYSTEM = null;
 const playlistHandler = new PlaylistHandler()
 
@@ -498,7 +497,6 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (!game.user.isGM)
 		return true;
 	//reset start combat stuff
-	NEXT_TURN_HIT = false
 	console.debug("quick-combat | triggering delete combatant functions")
 	//remove any effects
 	if (game.modules.get("sequencer")?.active ?? false) {
@@ -659,12 +657,6 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 	if (!game.user.isGM && !combat?.active) {
 		return
 	}
-	//if the next turn hook hasn't been hit yet and its in combat round 1 and turn is not 0 then set it as 0
-	if (!NEXT_TURN_HIT && combat.round == 1 && combat.turn != 0) {
-		console.log("quick-combat | update turn order")
-		NEXT_TURN_HIT = true
-		await combat.update({turn:0})
-	}
 	
 	//only run for the GM and make sure the Sequencer is available check if theres a combat
 	if(game.settings.get("quick-combat", "combatMarkers") && (game.user.isGM) && typeof Sequencer !== "undefined" && combat?.active) {
@@ -724,14 +716,6 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 				.play()
 		}
 	}
-})
-
-Hooks.on("combatTurn", function() {
-	//if not the GM
-	if (!game.user.isGM) {
-		return
-	}
-	NEXT_TURN_HIT = true
 })
 
 Hooks.once("setup", function() {

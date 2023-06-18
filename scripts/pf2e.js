@@ -5,10 +5,31 @@ import {ask_initiative} from './bin.js'
 export class pf2eCombat {
 	constructor() {
 		this.init_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
-		var keys = Object.keys(CONFIG.PF2E.skills)
+		var keys = Object.keys(CONFIG.PF2E.skillList)
 		for (var i = 0; i < keys.length; i++) {
 			var key = keys[i]
-			this.init_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skills[key])}</option>`
+			this.init_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skillList[key])}</option>`
+		}
+	}
+
+	rollOptions(secret = true, skipDialog = true) {
+		if(secret) {
+			return {
+				secret: secret,
+				skipDialog: skipDialog,
+				formula: null,
+				updateTurn: true,
+				rollMode: CONST.DICE_ROLL_MODES.PRIVATE
+			}
+		}
+		else {
+			return {
+				secret: secret,
+				skipDialog: skipDialog,
+				formula: null,
+				updateTurn: true,
+				rollMode: CONST.DICE_ROLL_MODES.PUBLIC
+			}
 		}
 	}
 
@@ -44,8 +65,11 @@ export class pf2eCombat {
 			}
 		}
 		var init = await socket.executeAsUser(ask_initiative, user, this.init_options, combatant.actor.id)
+		//v10 update
 		await combatant.actor.update({"system.attributes.initiative.ability": init})
-		combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": true})
+		//v11 update
+		await combatant.actor.update({"system.attributes.initiative.statistic": init})
+		combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
 	}
 
 	async rollInitiative(combatant, userId) { 
@@ -66,8 +90,8 @@ export class pf2eCombat {
 			//if combatant is an NPC
 			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 				console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
-				await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
-				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
+				await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
+				combatant.combat.rollInitiative([combatant.id], this.rollOptions())
 			}
 			//if combatant is a PC and npcroll is not set
 			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
@@ -78,16 +102,14 @@ export class pf2eCombat {
 		//pf2e assume perception for every token
 		else if (game.settings.get("quick-combat", "autoInit") == "fast") {
 			console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
-			await combatant.actor.update({"system.attributes.initiative.ability": "perception"})
+			await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
 			//if combatant is an NPC
 			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": true})
+				combatant.combat.rollInitiative([combatant.id], this.rollOptions())
 			}
 			//if combatant is a PC and npcroll is not set
 			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": true})
+				combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
 			}	
 		}
 		//use pf2e system defaults
@@ -95,13 +117,11 @@ export class pf2eCombat {
 			console.log(`quick-combat | pf2e rolling default initiative for ${combatant.actor.name}`)
 			//if combatant is an NPC
 			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"secret": true, "skipDialog": false})
+				combatant.combat.rollInitiative([combatant.id], this.rollOptions(true, false))
 			}
 			//if combatant is a PC and npcroll is not set
 			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"secret": false, "skipDialog": false})
+				combatant.combat.rollInitiative([combatant.id], this.rollOptions(false, false))
 			}			
 		}
 	}
@@ -140,8 +160,8 @@ export class pf2eCombat {
 								}
 								//update actors to match initiative
 								console.debug(`quick-combat | updating ${npcs[i].actor.name} initiative to ${inits}`)
-								await npcs[i].actor.update({"system.attributes.initiative.ability": inits})
-								await combat.rollInitiative([npcs[i].id], {"secret": true, "skipDialog": true})
+								await npcs[i].actor.update({"system.attributes.initiative.statistic": inits})
+								await combat.rollInitiative([npcs[i].id], this.rollOptions())
 							}
 						}
 					}

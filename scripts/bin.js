@@ -61,7 +61,7 @@ export class PlaylistHandler {
 
 	get(fanfare = false, pickOne = false) {
 		//get scene playlists
-		let scene = game.scenes.active.id
+		let scene = game.scenes.active?.id
 		console.debug(`quick-combat | getting playlist for scene ${scene} fanfare: ${fanfare} pickOne: ${pickOne}`)
 		let playlists = []
 		//get scene playlists
@@ -110,6 +110,7 @@ export async function addPlayers() {
 			hidden: t.document.hidden
 		}
 	});
+	console.log("tokens", tokens)
 	//render combat
 	//rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
 	var combat = game.combats.viewed;
@@ -117,23 +118,13 @@ export async function addPlayers() {
 		if (game.user.isGM) {
 			console.debug("quick-combat | creating new combat")
 			const cls = getDocumentClass("Combat");
-			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: !tokens.length});
+			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: true});
 		} else {
 			ui.notifications.warn("COMBAT.NoneActive", {localize: true});
 			combat = null
 		}
 	}
-	//if there is a combat created
-	if (combat != null) {
-		// Process each controlled token, as well as the reference token
-		console.debug("quick-combat | adding combatants to combat")
-		await combat.createEmbeddedDocuments("Combatant", tokens)
-	}
-	//if no combat was created something went wrong and return
-	else {
-		return false
-	}
-	return true
+	return await combat.createEmbeddedDocuments("Combatant", tokens)
 }
 
 export async function startCombat() {
