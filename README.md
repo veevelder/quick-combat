@@ -4,6 +4,9 @@
 ![Supported Foundry Versions](https://img.shields.io/endpoint?url=https://foundryshields.com/version?url=https://github.com/veevelder/quick-combat/releases/latest/download/module.json)
 [![License](https://img.shields.io/github/license/veevelder/quick-combat?label=License)](LICENSE)
 
+# BUGS
+There is currently a bug with the turn order marker animations, the first round/turn when combat has started will apply several of the turn markers. Once the next/previous turn button has been hit it will fix itself. 
+
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
  * **NEW Feature!** Added Macro Support to Add Tokens to Combat, Start and Stop Combat.
