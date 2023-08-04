@@ -4,7 +4,7 @@ import {ask_initiative} from './bin.js'
 
 export class pf2eCombat {
 	constructor() {
-		this.init_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
+		this.init_options = "<option value='perception'>" + game.i18n.localize("PF2E.PerceptionLabel") + "</option>"
 		var keys = Object.keys(CONFIG.PF2E.skillList)
 		for (var i = 0; i < keys.length; i++) {
 			var key = keys[i]
