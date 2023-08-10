@@ -4,7 +4,13 @@ import {ask_initiative} from './bin.js'
 
 export class pf2eCombat {
 	constructor() {
-		this.init_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
+		//PF2e 5.2.0 update to perception flag
+		if (isNewerVersion(game.settings.version, "5.2.0")) {
+			this.init_options = "<option value='perception'>" + game.i18n.localize("PF2E.PerceptionLabel") + "</option>"
+		}
+		else {
+			this.init_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
+		}
 		var keys = Object.keys(CONFIG.PF2E.skillList)
 		for (var i = 0; i < keys.length; i++) {
 			var key = keys[i]
