@@ -1,23 +1,27 @@
 //Generic System Class/Functions
 //these functions may or may not work attempt anyways
 export class genericCombat {
-	rollInitiative(combatant, userId) {
+	async rollInitiative(combatant, userId, initiative = null) {
 		try {
 			//check if combatant already has an initiative
 			if (combatant.initiative) {
 				console.debug(`quick-combat | combatant ${combatant.name} already has an initiative skipping`)
 				return
 			}
-			console.log(`quick-combat | rolling initiative for ${combatant.name}`)
-			//if combatant is a NPC
-			if(combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
+			if (initiative) {
+				console.log(`quick-combat | setting initiative ${initiative} for ${combatant.name}`)
+				await combatant.update({"initiative": initiative})
 			}
-			//if PC and npcroll is not set
-			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				//combatant ==> combatant.id
-				combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
+			else {
+				console.log(`quick-combat | rolling initiative for ${combatant.name}`)
+				//if combatant is a NPC
+				if(combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
+					await combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PRIVATE}})
+				}
+				//if PC and npcroll is not set
+				else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
+					await combatant.combat.rollInitiative([combatant.id], {"messageOptions":{"rollMode": CONST.DICE_ROLL_MODES.PUBLIC}})
+				}
 			}
 		}
 		catch {

@@ -222,6 +222,15 @@ Hooks.once("ready", () => {
 			"pc": "PC Only"
 		}
 	})
+	game.settings.register("quick-combat", "group", {
+		name: "QuickCombat.Group",
+		hint: "QuickCombat.GroupHint",
+		scope: "world",
+		config: CONFIG.hasOwnProperty("OSE") ? false : true,
+		default: false,
+		type: Boolean
+	})
+
 
 	//hidden settings
 	game.settings.register("quick-combat", "oldPlaylist", {
@@ -427,15 +436,22 @@ Hooks.on("createCombatant", async (combatant, update, userId) => {
 	if (combatant.initiative)
 		return true
 
-	//check if initiative option is set
-	if(game.settings.get("quick-combat", "initiative") != "disabled") {
-		//do system specific rolling options
-		if (SYSTEM) {
-			SYSTEM.rollInitiative(combatant, userId)
-		}
-		//for any other system
-		else {
-			console.warn("quick-combat | game system does not have any roll initiative options available")
+	if(game.combat.started) {
+		//check if initiative option is set
+		if(game.settings.get("quick-combat", "initiative") != "disabled") {
+			//do system specific rolling options
+			if (SYSTEM) {
+				//check for group NPC initiatives
+				var initiative = null
+				if(game.settings.get("quick-combat", "group")) {
+					initiative = game.combat.combatants.find(a => a.name == combatant.name)?.initiative
+				}
+				SYSTEM.rollInitiative(combatant, userId, initiative)
+			}
+			//for any other system
+			else {
+				console.warn("quick-combat | game system does not have any roll initiative options available")
+			}
 		}
 	}
 })
@@ -447,13 +463,6 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 		return true;
 
 	console.debug("quick-combat | triggering start combat functions")
-
-	//ask for NPC rolls for PF2e
-	if (CONFIG.hasOwnProperty("PF2E") && SYSTEM) {
-		if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
-			SYSTEM.rollNPCInitiatives(combat)
-		}
-	}
 
 	if (game.settings.get("quick-combat", "chooseplaylist")) {
 		//generate a list of buttons
@@ -491,6 +500,48 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 		playlistHandler.start(playlistHandler.get(false,true))
 	}
 });
+
+Hooks.on("combatStart", async (combat, options) => {
+	//check if initiative option is set
+	if(game.settings.get("quick-combat", "initiative") != "disabled") {
+		//do system specific rolling options
+		if (SYSTEM) {
+			//ask for NPC rolls for PF2e
+			if (CONFIG.hasOwnProperty("PF2E")) {
+				if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
+					await SYSTEM.rollNPCInitiatives(combat)
+				}
+			}
+
+			//check for group NPC initiatives
+			if(game.settings.get("quick-combat", "group")) {
+				//group all NPCs by name
+				var groups = combat.combatants.filter(a => a.isNPC).reduce((group, combatant) => ({...group, [combatant.actor.id]: (group[combatant.actor.id] || []).concat(combatant)}), {})
+				//get only multiples
+				var multiples = Object.keys(groups).filter(k => groups[k].length > 1)
+				var firsts = multiples.map(k => groups[k][0])
+				//roll its initiative
+				for (var i = 0; i < firsts.length; i++) {
+					await SYSTEM.rollInitiative(firsts[i], game.userId)
+				}
+				//roll the rest
+				var the_rest = multiples.map(k => groups[k].splice(1)).flat()
+				for (var i = 0; i < the_rest.length; i++) {
+					var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
+					await SYSTEM.rollInitiative(the_rest[i], game.userId, initiative)
+				}
+			}
+			//roll everything else
+			combat.combatants.forEach(async function(c) {
+				await SYSTEM.rollInitiative(c, game.userId)
+			})
+		}
+		//for any other system
+		else {
+			console.warn("quick-combat | game system does not have any roll initiative options available")
+		}
+	}
+})
 
 //when a combat is ended do some end of combat stuff, exp, remove tokens etc
 Hooks.on("deleteCombat", async (combat, options, userId) => {

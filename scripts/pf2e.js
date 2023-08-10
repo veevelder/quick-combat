@@ -72,65 +72,85 @@ export class pf2eCombat {
 		combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
 	}
 
-	async rollInitiative(combatant, userId) { 
+	async rollInitiative(combatant, userId, initiative = null) { 
 		//if combatant already has an initiative skip them
 		if (combatant.initiative) {
 			console.debug(`quick-combat | combatant ${combatant.name} already roll for initiative skipping`)
 			return
 		}
-		//render a popup box to ask for NPC and PC roll types
-		if (game.settings.get("quick-combat", "autoInit") == "prompt") {
-			//send prompts to PCs
-			if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				this.promptOwner(combatant, userId)
-			}
-			//ask group NPCs later before Combat is started
+		if (initiative) {
+			console.log(`quick-combat | setting initiative ${initiative} for ${combatant.name}`)
+			await combatant.update({"initiative": initiative})
 		}
-		else if (game.settings.get("quick-combat", "autoInit") == "fast_prompt") {
-			//if combatant is an NPC
-			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
-				await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
-				combatant.combat.rollInitiative([combatant.id], this.rollOptions())
-			}
-			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				console.log(`quick-combat | pf2e rolling fast_prompt PC initiative for ${combatant.actor.name}`)
-				this.promptOwner(combatant, userId)
-			}
-		}
-		//pf2e assume perception for every token
-		else if (game.settings.get("quick-combat", "autoInit") == "fast") {
-			console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
-			await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
-			//if combatant is an NPC
-			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				combatant.combat.rollInitiative([combatant.id], this.rollOptions())
-			}
-			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
-			}	
-		}
-		//use pf2e system defaults
 		else {
-			console.log(`quick-combat | pf2e rolling default initiative for ${combatant.actor.name}`)
-			//if combatant is an NPC
-			if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
-				combatant.combat.rollInitiative([combatant.id], this.rollOptions(true, false))
+			//render a popup box to ask for NPC and PC roll types
+			if (game.settings.get("quick-combat", "autoInit") == "prompt") {
+				//send prompts to PCs
+				if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
+					this.promptOwner(combatant, userId)
+				}
+				//ask group NPCs later before Combat is started
 			}
-			//if combatant is a PC and npcroll is not set
-			else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
-				combatant.combat.rollInitiative([combatant.id], this.rollOptions(false, false))
-			}			
+			//prompt for users assume perception for npcs
+			else if (game.settings.get("quick-combat", "autoInit") == "fast_prompt") {
+				//if combatant is an NPC
+				if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
+					console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
+					await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
+					await combatant.combat.rollInitiative([combatant.id], this.rollOptions())
+				}
+				//if combatant is a PC and npcroll is not set
+				else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
+					console.log(`quick-combat | pf2e rolling fast_prompt PC initiative for ${combatant.actor.name}`)
+					this.promptOwner(combatant, userId)
+				}
+			}
+			//pf2e assume perception for every token
+			else if (game.settings.get("quick-combat", "autoInit") == "fast") {
+				console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
+				await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
+				//if combatant is an NPC
+				if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
+					await combatant.combat.rollInitiative([combatant.id], this.rollOptions())
+				}
+				//if combatant is a PC and npcroll is not set
+				else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
+					await combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
+				}	
+			}
+			//use pf2e system defaults
+			else {
+				console.log(`quick-combat | pf2e rolling default initiative for ${combatant.actor.name}`)
+				//if combatant is an NPC
+				if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
+					await combatant.combat.rollInitiative([combatant.id], this.rollOptions(true, false))
+				}
+				//if combatant is a PC and npcroll is not set
+				else if (!combatant.isNPC && game.settings.get("quick-combat", "initiative") != "npc") {
+					await combatant.combat.rollInitiative([combatant.id], this.rollOptions(false, false))
+				}			
+			}
 		}
 	}
 
-	rollNPCInitiatives(combat) {
+	async rollNPCInitiatives(combat) {
 		//render a popup box to ask for NPC group roll types
 		if (game.settings.get("quick-combat", "autoInit") == "prompt") {
 			//get all npcs that don't have an initiative
-			var npcs = combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null)
+			var npcs = []
+			//only present one NPC for groups
+			if(game.settings.get("quick-combat", "group")) {
+				combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null).filter(function(item){
+					var i = npcs.findIndex(x => (x.actor.id == item.actor.id));
+					if(i <= -1){
+						npcs.push(item);
+					}
+					return null;
+				  });
+			}
+			else {
+				npcs = combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null)
+			}
 			//if there are not NPCs to roll then skip
 			if(npcs.length == 0) {
 				console.log("quick-combat | no NPCs found to roll skipping")
@@ -162,6 +182,14 @@ export class pf2eCombat {
 								console.debug(`quick-combat | updating ${npcs[i].actor.name} initiative to ${inits}`)
 								await npcs[i].actor.update({"system.attributes.initiative.statistic": inits})
 								await combat.rollInitiative([npcs[i].id], this.rollOptions())
+							}
+							if(game.settings.get("quick-combat", "group")) {
+								//get the rest of the NPCS to set initiatives
+								var the_rest = game.combat.combatants.filter(a => a.isNPC && a.initiative == null)
+								for (var i = 0; i < the_rest.length; i++) {
+									var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
+									await the_rest[i].update({"initiative": initiative})
+								}
 							}
 						}
 					}

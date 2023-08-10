@@ -80,7 +80,7 @@ export class PlaylistHandler {
 		if (pickOne) {
 			//select a random playlist
 			let a = game.playlists.get(playlists[Math.floor(Math.random()*playlists.length)].id)
-			console.debug(`quick-combat | picking single playlist ${a} from group`)
+			console.debug("quick-combat | picking single playlist from group", a)
 			return a
 		}
 		else {
@@ -110,7 +110,6 @@ export async function addPlayers() {
 			hidden: t.document.hidden
 		}
 	});
-	console.log("tokens", tokens)
 	//render combat
 	//rip off  async toggleCombat(state=true, combat=null, {token=null}={}) from  base game line ~36882
 	var combat = game.combats.viewed;

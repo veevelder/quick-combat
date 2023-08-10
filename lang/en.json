@@ -61,5 +61,7 @@
 	"QuickCombat.PF2E.groupHint": "Enable to roll all NPCs with selected Initiative Type, Disable and for each listed NPC below select the Initiative Type.",
 	"QuickCombat.MLD.warning": "Quick Combat - Monk's Little Details setting option 'No Combat Without Initiative' is set, which can cause issues with how Quick Combat Works. It is suggested to disable that option before continuing.",
 	"QuickCombat.Initiative": "Set Initiative Mode",
-	"QuickCombat.InitiativeHint": "Enabled - Will Roll For Initiative. Disabled - Will not Roll For Initiative. NPC Only - Will only roll for NPC Initiative, PC Only - Will only roll for PC Initiative."
+	"QuickCombat.InitiativeHint": "Enabled - Will Roll For Initiative. Disabled - Will not Roll For Initiative. NPC Only - Will only roll for NPC Initiative, PC Only - Will only roll for PC Initiative.",
+	"QuickCombat.Group": "Group NPC Initiative",
+	"QuickCombat.GroupHint": "NPCs will have the same initiatives if they are of the same type"
 }
