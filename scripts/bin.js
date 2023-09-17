@@ -117,7 +117,7 @@ export async function addPlayers() {
 		if (game.user.isGM) {
 			console.debug("quick-combat | creating new combat")
 			const cls = getDocumentClass("Combat");
-			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: true});
+			combat = await cls.create({scene: canvas.scene.id, active: true});
 		} else {
 			ui.notifications.warn("COMBAT.NoneActive", {localize: true});
 			combat = null
@@ -126,12 +126,35 @@ export async function addPlayers() {
 	return await combat.createEmbeddedDocuments("Combatant", tokens)
 }
 
+function await_inits() {
+	//wait for every token to roll initiative before starting combat
+	//depending on initiate mode select only to correct combatants to monitor
+	var combatants = game.combat.combatants
+	//npc only
+	if (game.settings.get("quick-combat", "initiative") == "npc") {
+		console.debug("quick-combat | filtering for npcs")
+		combatants = combatants.filter(i => i.isNPC)
+	}
+	//pc only
+	else if (game.settings.get("quick-combat", "initiative") == "pc") {
+		console.debug("quick-combat | filtering for pcs")
+		combatants = combatants.filter(i => !i.isNPC)
+	}
+	var done_rolling = combatants.map(i => i.initiative).every(i => typeof(i) === "number")
+	if (done_rolling) {
+		clearInterval(window.initInterval)
+		console.debug("quick-combat | updating first round turn order")
+		game.combat.update({"turn": 0})
+	}
+}
+
 export async function startCombat() {
 	//start the combat as long as its not OSE
 	if (CONFIG.hasOwnProperty("OSE")) {
 		console.debug("quick-combat | skipping combat start for OSE")
 		return
 	}
+	window.initInterval = setInterval(await_inits, 500)
 	console.log("quick-combat | starting combat")
 	await game.combat.startCombat();
 }
