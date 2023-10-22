@@ -117,7 +117,7 @@ export async function addPlayers() {
 		if (game.user.isGM) {
 			console.debug("quick-combat | creating new combat")
 			const cls = getDocumentClass("Combat");
-			combat = await cls.create({scene: canvas.scene.id, active: true});
+			combat = await cls.create({scene: canvas.scene.id, active: true}, {render: true});
 		} else {
 			ui.notifications.warn("COMBAT.NoneActive", {localize: true});
 			combat = null
@@ -126,10 +126,11 @@ export async function addPlayers() {
 	return await combat.createEmbeddedDocuments("Combatant", tokens)
 }
 
-function await_inits() {
+export function await_inits() {
 	//wait for every token to roll initiative before starting combat
 	//depending on initiate mode select only to correct combatants to monitor
 	var combatants = game.combat.combatants
+	console.debug("quick-combat | awaiting for all initiates")
 	//npc only
 	if (game.settings.get("quick-combat", "initiative") == "npc") {
 		console.debug("quick-combat | filtering for npcs")
@@ -154,7 +155,6 @@ export async function startCombat() {
 		console.debug("quick-combat | skipping combat start for OSE")
 		return
 	}
-	window.initInterval = setInterval(await_inits, 500)
 	console.log("quick-combat | starting combat")
 	await game.combat.startCombat();
 }

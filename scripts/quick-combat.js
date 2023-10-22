@@ -1,5 +1,5 @@
 import {addPlayers, startCombat, endCombat, PlaylistHandler} from './bin.js'
-import {hotkey} from './bin.js'
+import {await_inits, hotkey} from './bin.js'
 import {genericCombat} from './generic.js'
 import {dnd5eCombat} from './dnd5e.js'
 import {pf2eCombat} from './pf2e.js'
@@ -506,6 +506,8 @@ Hooks.on("combatStart", async (combat, options) => {
 	if(game.settings.get("quick-combat", "initiative") != "disabled") {
 		//do system specific rolling options
 		if (SYSTEM) {
+			//start the await initiative background task
+			window.initInterval = setInterval(await_inits, 500)
 			//ask for NPC rolls for PF2e
 			if (CONFIG.hasOwnProperty("PF2E")) {
 				if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
