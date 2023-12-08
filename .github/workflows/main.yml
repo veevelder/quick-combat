@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     # get part of the tag after the `v`
     - name: Extract tag version number
@@ -43,3 +43,7 @@ jobs:
         artifacts: './module.json, ./module.zip'
         tag: ${{ github.event.release.tag_name }}
         body: ${{ github.event.release.body }}
+
+    - name: Publish Module to FoundryVTT
+      run: |
+        curl -X POST -H  'Content-Type: application/json' -H 'Authorization: ${{secrets.FOUNDRY_API_KEY}}' --data '{"id":"random-encounters","release":{"version":"${{github.event.release.tag_name}}","manifest":"https://github.com/${{github.repository}}/releases/latest/download/module.json","compatibility":{"minimum":"11","verified":"11","maximum":""}}}' https://api.foundryvtt.com/_api/packages/release_version
