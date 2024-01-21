@@ -46,4 +46,4 @@ jobs:
 
     - name: Publish Module to FoundryVTT
       run: |
-        curl -X POST -H  'Content-Type: application/json' -H 'Authorization: ${{secrets.FOUNDRY_API_KEY}}' --data '{"id":"random-encounters","release":{"version":"${{github.event.release.tag_name}}","manifest":"https://github.com/${{github.repository}}/releases/latest/download/module.json","compatibility":{"minimum":"11","verified":"11","maximum":""}}}' https://api.foundryvtt.com/_api/packages/release_version
+        curl -X POST -H  'Content-Type: application/json' -H 'Authorization: ${{secrets.FOUNDRY_API_KEY}}' --data '{"id":"quick-combat","release":{"version":"${{github.event.release.tag_name}}","manifest":"https://github.com/${{github.repository}}/releases/latest/download/module.json","compatibility":{"minimum":"11","verified":"11","maximum":""}}}' https://api.foundryvtt.com/_api/packages/release_version
