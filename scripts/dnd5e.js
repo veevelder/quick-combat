@@ -47,10 +47,13 @@ export class dnd5eCombat {
 					let max_xp = a.actor.system.details.xp.max
 					if (new_exp >= max_xp) {
 						level_up = "<td><strong>" + game.i18n.localize("QuickCombat.LevelUp") + "</strong></td>"
+						//if the pc has a class then update the level
 						let cl = a.actor.items.find(a => a.type == "class")
-						cl.update({
-							"data.levels": cl.system.levels + 1
-						})
+						if (cl) {
+							cl.update({
+								"data.levels": cl.system.levels + 1
+							})
+						}
 					}
 					actor_exp_msg += "<tr data-tokenid='" + a.token.id + "' class='quick-combat-token-selector'><td><img src='" + a.img + "' width='50' height='50'></td><td><strong>" + a.name + "</strong></td><td>" + a.actor.system.details.xp.value + " &rarr; " + new_exp + "</p></td>" + level_up + "</tr>"
 					a.actor.update({
