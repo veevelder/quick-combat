@@ -126,19 +126,17 @@ export async function addPlayers() {
 	return await combat.createEmbeddedDocuments("Combatant", tokens)
 }
 
-export function await_inits() {
+export function await_inits(initiative_mode) {
 	//wait for every token to roll initiative before starting combat
 	//depending on initiate mode select only to correct combatants to monitor
 	var combatants = game.combat.combatants
 	console.debug("quick-combat | awaiting for all initiates")
 	//npc only
-	if (game.settings.get("quick-combat", "initiative") == "npc") {
-		console.debug("quick-combat | filtering for npcs")
+	if (initiative_mode == "npc") {
 		combatants = combatants.filter(i => i.isNPC)
 	}
 	//pc only
-	else if (game.settings.get("quick-combat", "initiative") == "pc") {
-		console.debug("quick-combat | filtering for pcs")
+	else if (initiative_mode == "pc") {
 		combatants = combatants.filter(i => !i.isNPC)
 	}
 	var done_rolling = combatants.map(i => i.initiative).every(i => typeof(i) === "number")

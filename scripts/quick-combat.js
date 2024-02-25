@@ -335,8 +335,7 @@ Hooks.once("ready", () => {
 	})
 
 	//migrate the NPC rolling option
-	var npc_roll = game.settings.get("quick-combat", "npcroll")
-	if (npc_roll) {
+	if (game.settings.get("quick-combat", "npcroll")) {
 		console.debug("quick-combat | migrating old NPC Rolling setting to new initiative setting npc")
 		game.settings.set("quick-combat", "initiative", "npc")
 		game.settings.set("quick-combat", "npcroll", false)
@@ -430,29 +429,16 @@ Hooks.once("ready", () => {
 //when a combatant is added to the combat tracker
 Hooks.on("createCombatant", async (combatant, update, userId) => {
 	//only run if the GM added combatant OR if the player added the combatant
-	if (game.userId != userId) {
-		return true
+	if (game.userId != userId || combatant.initiative !== null) {
+		return
 	}
-	if (combatant.initiative)
-		return true
-
-	if(game.combat.started) {
-		//check if initiative option is set
-		if(game.settings.get("quick-combat", "initiative") != "disabled") {
-			//do system specific rolling options
-			if (SYSTEM) {
-				//check for group NPC initiatives
-				var initiative = null
-				if(game.settings.get("quick-combat", "group")) {
-					initiative = game.combat.combatants.find(a => a.name == combatant.name)?.initiative
-				}
-				SYSTEM.rollInitiative(combatant, userId, initiative)
-			}
-			//for any other system
-			else {
-				console.warn("quick-combat | game system does not have any roll initiative options available")
-			}
+	if(game.combat.started && game.settings.get("quick-combat", "initiative") != "disabled") {
+		//check for group NPC initiatives
+		var initiative = null
+		if(game.settings.get("quick-combat", "group")) {
+			initiative = game.combat.combatants.find(a => a.name == combatant.name)?.initiative
 		}
+		SYSTEM.rollInitiative(combatant, userId, initiative)
 	}
 })
 
@@ -460,7 +446,7 @@ Hooks.on("createCombatant", async (combatant, update, userId) => {
 Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 	const combatStart = combat.round === 0 && update.round === 1;
 	if (!game.user.isGM || !combatStart)
-		return true;
+		return
 
 	console.debug("quick-combat | triggering start combat functions")
 
@@ -501,54 +487,51 @@ Hooks.on("preUpdateCombat", async (combat, update, options, userId) => {
 	}
 });
 
-Hooks.on("combatStart", async (combat, options) => {
+Hooks.on("combatStart", async (combat) => {
+	if (!game.user.isGM)
+		return
+
 	//check if initiative option is set
 	if(game.settings.get("quick-combat", "initiative") != "disabled") {
-		//do system specific rolling options
-		if (SYSTEM) {
-			//start the await initiative background task
-			window.initInterval = setInterval(await_inits, 500)
-			//ask for NPC rolls for PF2e
-			if (CONFIG.hasOwnProperty("PF2E")) {
-				if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
-					await SYSTEM.rollNPCInitiatives(combat)
-				}
+		//ask for NPC rolls for PF2e
+		if (CONFIG.hasOwnProperty("PF2E")) {
+			if(game.settings.get("quick-combat", "initiative") == "npc" || game.settings.get("quick-combat", "initiative") == "enabled") {
+				await SYSTEM.rollNPCInitiatives(combat)
 			}
+		}
 
-			//check for group NPC initiatives
-			if(game.settings.get("quick-combat", "group")) {
-				//group all NPCs by name
-				var groups = combat.combatants.filter(a => a.isNPC).reduce((group, combatant) => ({...group, [combatant.actor.id]: (group[combatant.actor.id] || []).concat(combatant)}), {})
-				//get only multiples
-				var multiples = Object.keys(groups).filter(k => groups[k].length > 1)
-				var firsts = multiples.map(k => groups[k][0])
-				//roll its initiative
-				for (var i = 0; i < firsts.length; i++) {
-					await SYSTEM.rollInitiative(firsts[i], game.userId)
-				}
-				//roll the rest
-				var the_rest = multiples.map(k => groups[k].splice(1)).flat()
-				for (var i = 0; i < the_rest.length; i++) {
-					var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
-					await SYSTEM.rollInitiative(the_rest[i], game.userId, initiative)
-				}
+		//check for group NPC initiatives
+		if(game.settings.get("quick-combat", "group")) {
+			//group all NPCs by name
+			var groups = combat.combatants.filter(a => a.isNPC).reduce((group, combatant) => ({...group, [combatant.actor.id]: (group[combatant.actor.id] || []).concat(combatant)}), {})
+			//get only multiples
+			var multiples = Object.keys(groups).filter(k => groups[k].length > 1)
+			var firsts = multiples.map(k => groups[k][0])
+			//roll its initiative
+			for (var i = 0; i < firsts.length; i++) {
+				await SYSTEM.rollInitiative(firsts[i], game.userId)
 			}
-			//roll everything else
-			combat.combatants.forEach(async function(c) {
-				await SYSTEM.rollInitiative(c, game.userId)
-			})
+			//roll the rest
+			var the_rest = multiples.map(k => groups[k].splice(1)).flat()
+			for (var i = 0; i < the_rest.length; i++) {
+				var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
+				await SYSTEM.rollInitiative(the_rest[i], game.userId, initiative)
+			}
 		}
-		//for any other system
-		else {
-			console.warn("quick-combat | game system does not have any roll initiative options available")
-		}
+		//roll everything else
+		combat.combatants.forEach(async function(c) {
+			await SYSTEM.rollInitiative(c, game.userId)
+		})
+		//start the await initiative background task
+		window.initInterval = setInterval(await_inits, 1500, game.settings.get("quick-combat", "initiative"))
 	}
 })
 
 //when a combat is ended do some end of combat stuff, exp, remove tokens etc
 Hooks.on("deleteCombat", async (combat, options, userId) => {
 	if (!game.user.isGM)
-		return true;
+		return
+
 	//reset start combat stuff
 	console.debug("quick-combat | triggering delete combatant functions")
 	//remove any effects
@@ -557,8 +540,8 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 		Sequencer?.EffectManager.endEffects({ name: "activeTurn" })
 		Sequencer?.EffectManager.endEffects({ name: "onDeck" })
 	}
-	//if a system was defined and if track exp setting was set
-	if (SYSTEM && game.settings.get("quick-combat", "exp")) {
+	//if track exp setting was set
+	if (game.settings.get("quick-combat", "exp")) {
 		SYSTEM.awardEXP(combat, userId)
 	}
 	//remove defeated npc tokens
@@ -615,10 +598,11 @@ Hooks.on("deleteCombat", async (combat, options, userId) => {
 Hooks.on("updatePlaylist", async (playlist, update, options, userId) => {
 	//only run for the GM
 	if (!game.user.isGM)
-		return true;
+		return
+
 	//don't do anything if the update is set to playing
 	if(playlist.playing)
-		return true;
+		return
 
 	let startOldPlaylist = false
 	//if playlist is the combat playlist stopping
@@ -773,6 +757,7 @@ Hooks.on("updateCombat", async (combat, updates, diff, id) => {
 
 Hooks.once("setup", function() {
 	console.debug("quick-combat | running setup hooks")
+	//adding macro calls
 	var operations = {
 		addPlayers: addPlayers,
 		startCombat: startCombat,

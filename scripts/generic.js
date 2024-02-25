@@ -1,7 +1,7 @@
 //Generic System Class/Functions
 //these functions may or may not work attempt anyways
 export class genericCombat {
-	async rollInitiative(combatant, userId, initiative = null) {
+	async rollInitiative(combatant, userId, initiative = null, group = false) {
 		try {
 			//check if combatant already has an initiative
 			if (combatant.initiative) {

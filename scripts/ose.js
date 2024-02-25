@@ -1,6 +1,6 @@
 //Old School Essentials Class/Functions
 export class oseCombat {
-	async rollInitiative(combatant, userId, initiative = null) {
+	async rollInitiative(combatant, userId, initiative = null, group = false) {
 		console.debug("quick-combat | skipping combat rolling for OSE")
 	}
 
