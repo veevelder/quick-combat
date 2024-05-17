@@ -1,9 +1,9 @@
 {
 	"QuickCombat.Playlist" : "Combat Playlist",
 	"QuickCombat.PlaylistHint" : "Select a Playlist to use as Combat Music",
-	"QuickCombat.FanfarePlaylist" : "Fanfare Playlist",
+	"QuickCombat.FanfarePlaylist" : "ファンファーレ プレイリスト",
 	"QuickCombat.FanfarePlaylistHint" : "Select a Playlist to use to play a single track at the end of combat, before starting the old playlist",
-	"QuickCombat.BossPlaylist" : "Boss Playlist",
+	"QuickCombat.BossPlaylist" : "ボス プレイリスト",
 	"QuickCombat.BossPlaylistHint" : "Select a Playlist to use as Boss Combat Music separate from Combat Playlist",
 	"QuickCombat.ChoosePlaylist" : "Choose Playlist",
 	"QuickCombat.ChoosePlaylistHint" : "Display a popup when starting combat to determine which playlist to start. If disabled and there are multiple playlists configured (scene's are taken into account) it will always start a random playlist.",
