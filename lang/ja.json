@@ -47,7 +47,7 @@
 	"QuickCombat.button.label": "Configure",
 	"QuickCombat.button.hint": "Setup the playlists to auto start when combat starts. You can configure playlists to only run on a specific scene or all (default). It is recommended to select the choose playlist button if multiple playlists are available for any scene otherwise a random playlist will be chosen.",
 	"QuickCombat.name.label": "Name",
-	"QuickCombat.playlist.label": "Playlist",
+	"QuickCombat.playlist.label": "プレイリスト",
 	"QuickCombat.playlist.empty": "The selected playlist is empty, please fill it with some sounds or it will be skipped",
 	"QuickCombat.scene.label": "Scene",
 	"QuickCombat.fanfare.label": "Fanfare",
