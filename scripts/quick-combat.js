@@ -690,7 +690,8 @@ Hooks.on("updateCombat", async (combat) => {
   }
 
   //if the user doesn't want to run include the combat markers'
-  if (!game.setting.get("quick-combat", "combatMarkers")) {
+  let combatMarkers = game.settings.get("quick-combat", "combatMarkers");
+  if (!combatMarkers) {
     return;
   }
 
@@ -748,7 +749,7 @@ Hooks.on("updateCombat", async (combat) => {
   ) {
     new Sequence("quick-combat")
       .effect()
-      .file(activeTurnFile)
+      .file(game.settings.get("quick-combat", "combatMarkers-activeTurn"))
       .attachTo(currentToken, { bindVisibility: true, bindAlpha: true })
       .scaleToObject(scale)
       .belowTokens()
