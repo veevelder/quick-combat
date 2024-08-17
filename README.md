@@ -6,10 +6,9 @@
 
 # Quick Combat module for FVTT
 Adds the ability to add a Combat Playlist. Whenever you start combat the playlist will start.
- * **NEW Feature!** Added Macro Support to Add Tokens to Combat, Start and Stop Combat.
- * **NEW Feature!** Added more settings to NOT roll any initiative for any token. This will enable to mod to just start/stop playlists.
- * **NEW Feature!** You can now define any number of playlists Combat/Boss/Mini Boss whatever fits your needs. Works best with the `Choose Playlist Settings`. You can even define playlists for specific scenes!
- * **NOTE*** The module will make its best attempt to migrate the old playlist settings over to the new system. You should make sure your playlists are setup correctly
+ * Added Macro Support to Add Tokens to Combat, Start and Stop Combat.
+ * Added more settings to NOT roll any initiative for any token. This will enable to mod to just start/stop playlists.
+ * You can now define any number of playlists Combat/Boss/Mini Boss whatever fits your needs. Works best with the `Choose Playlist Settings`. You can even define playlists for specific scenes!
 
 Adds Auto Experience Tracking. When NPCs are defeated it will add the experience to PCs.
 

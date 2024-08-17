@@ -14,7 +14,6 @@ export async function ask_initiative(npc_options, actor_id) {
 					callback: async  (html) => {
 						var inits = html.find("select#inits").find(":selected").val()
 						console.debug(`quick-combat | updating ${actor.name} initiative to ${inits}`)
-						//actor.update({"system.attributes.initiative.ability": inits})
 						resolve(inits)
 					}
 				}
@@ -30,32 +29,120 @@ Hooks.once("socketlib.ready", () => {
 
 //playlist functions
 export class PlaylistHandler {
-	async save(stop=false) {
+	async stop(playlist) {
+		let playlists = game.playlists.playing
+
+		//if playlist is defined stop single otherwise stop all
+		if (playlist) {
+			playlists = playlists.filter(a => a.id == playlist)
+		}
+
+		playlists.forEach(function(playing) {
+			console.debug(`quick-combat | stopping old playlist ${playing.name}`)
+			playing.stopAll()
+		});
+	}
+
+	async save() {
 		let playlists = []
 		//list old playlists
 		game.playlists.playing.forEach(function(playing) {
-			var track_ids = playing.sounds.filter(a => a.playing == true).map(a => a.id)
-			playlists.push({id:playing.id,track_ids:track_ids})
-			//if a new playlist was given stop the old ones
-			if (stop) {
-				console.debug(`quick-combat | stopping old playlist ${playing.name}`)
-				playing.stopAll()
+			//check to see if need to save track ids
+			var track_id = ""
+			const restart = game.settings.get("quick-combat", "playlistRestart")
+			if (restart) {
+				track_id = playing.sounds.filter(a => a.playing == true).map(a => a.id)[0]
 			}
+			playlists.push({id:playing.id,track_id:track_id})
 		});
 		game.settings.set("quick-combat", "oldPlaylist", playlists)
 	}
 
-	async start(playlist) {
+	async start_combat(playlist) {
 		if (playlist && playlist.sounds.size > 0) {
-			await this.save(true)
-			game.settings.set("quick-combat", "combatPlaylist", playlist.id)
+			await this.save()
+			await this.stop()
 			console.log(`quick-combat | starting combat playlist ${playlist.name}`)
+			// reshuffel playlist
+			await playlist.update({mode:playlist.mode})
 			playlist.playAll()
 		}
 		else {
-			await this.save(false)
+			await this.save()
 			console.debug("quick-combat | setting no playlist to start")
-			game.settings.set("quick-combat", "combatPlaylist", null)
+		}
+	}
+
+	async start_old() {
+		//get the old playlist setting
+		let playlists = game.settings.get("quick-combat", "oldPlaylist")
+		//set the old playlist setting to null
+		game.settings.set("quick-combat", "oldPlaylist", null)
+
+		//if nothing was set then return
+		if (playlists) {
+			//get a list of old playlists that are not currently playing
+			var oldPlaylists = []
+			playlists.forEach(a => {
+				var p = game.playlists.get(a.id)
+				if (!p.playing) {
+					oldPlaylists.push(p)
+				}
+			})
+
+			if (oldPlaylists.length != 0) {
+				//stop other playslist
+				this.stop()
+
+				//get old playlist track id
+				oldPlaylists.forEach(async function(a) {
+					// reshuffel playlist
+					await a.update({mode:a.mode})
+
+					//get old playlist track ids
+					let track_id = playlists.find(b => b.id == a.id).track_id
+					if (track_id) {
+						console.debug(`quick-combat | starting old playlist '${a.name}' track '${track_id}'`)
+						a.playSound(a.sounds.get(track_id))
+					}
+					//if none then just start the playlist again
+					else {
+						console.debug(`quick-combat | starting old playlist '${a.name}'`)
+						a.playAll();
+					}
+				})
+			}
+		}
+		else {
+			console.warn("quick-combat | no old playlists found, skipping")
+		}
+	}
+
+	async start_fanfare() {
+		let fanfare = this.get(true, true)
+		if (fanfare) {
+			//stop all playlists
+			this.stop()
+			console.debug(`quick-combat | starting fanfare playlist ${fanfare.name}`)
+			var items = Array.from(fanfare.sounds);
+			if (items.length > 0) {
+				var item = items[Math.floor(Math.random()*items.length)];
+				console.debug(`quick-combat | starting fanfare track ${item.name}`)
+				fanfare.playSound(item);
+				//set fanfare setting
+				game.settings.set("quick-combat", "fanfarePlaylist", fanfare.id)
+				return true
+			}
+			else {
+				//no fanfare items to play then just start the old playlist
+				console.warn("quick-combat | fanfare playlist has no items")
+				game.settings.set("quick-combat", "fanfarePlaylist", null)
+				return false
+			}
+		}
+		else {
+			game.settings.set("quick-combat", "fanfarePlaylist", null)
+			return false
 		}
 	}
 
@@ -65,7 +152,7 @@ export class PlaylistHandler {
 		console.debug(`quick-combat | getting playlist for scene ${scene} fanfare: ${fanfare} pickOne: ${pickOne}`)
 		let playlists = []
 		//get scene playlists
-		playlists = game.settings.get("quick-combat", "playlists").filter(a => a.scene == scene && a.fanfare == fanfare)
+		playlists = game.settings.get("quick-combat", "playlists").filter(a => (a.scene == scene || a.scene == "") && a.fanfare == fanfare)
 		//if not scene playlists get all scenes
 		if (playlists.length == 0) {
 			console.debug("quick-combat | no scene playlist found looking for all scenes")
@@ -101,8 +188,8 @@ export async function addPlayers() {
 		ui.notifications.error(game.i18n.localize("QuickCombat.KeyError"));
 		return false
 	}		
-	console.debug("quick-combat | getting player tokens skipping Pets/Summons")
-	var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).filter(t => t.actor.items.filter(i => i.name == "Pet" || i.name == "Summon").length == 0).map(t => {
+	console.debug("quick-combat | getting player tokens")
+	var tokens = canvas.tokens.controlled.filter(t => !t.inCombat).map(t => {
 		return {
 			tokenId: t.id,
 			sceneId: t.scene.id,

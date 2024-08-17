@@ -1,20 +1,32 @@
 //Pathfinder 2nd Edition Class/Functions
 import {socket} from './bin.js'
 import {ask_initiative} from './bin.js'
+import {genericCombat} from './generic.js'
 
-export class pf2eCombat {
+export class pf2eCombat extends genericCombat {
 	constructor() {
+		super()
 		//PF2e 5.2.0 update to perception flag
-		if (isNewerVersion(game.settings.version, "5.2.0")) {
+		if (foundry.utils.isNewerVersion(game.settings.version, "5.2.0")) {
 			this.init_options = "<option value='perception'>" + game.i18n.localize("PF2E.PerceptionLabel") + "</option>"
 		}
 		else {
 			this.init_options = "<option value='perception'>" + game.i18n.localize(CONFIG.PF2E.attributes.perception) + "</option>"
 		}
-		var keys = Object.keys(CONFIG.PF2E.skillList)
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i]
-			this.init_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skillList[key])}</option>`
+
+		if (CONFIG.PF2E.hasOwnProperty("skillList")) {
+			var keys = Object.keys(CONFIG.PF2E.skillList)
+			for (var i = 0; i < keys.length; i++) {
+				var key = keys[i]
+				this.init_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skillList[key])}</option>`
+			}
+		}
+		else {
+			var keys = Object.keys(CONFIG.PF2E.skills)
+			for (var i = 0; i < keys.length; i++) {
+				var key = keys[i]
+				this.init_options += `<option value='${key}'>${game.i18n.localize(CONFIG.PF2E.skills[key].label)}</option>`
+			}
 		}
 	}
 
@@ -39,8 +51,13 @@ export class pf2eCombat {
 		}
 	}
 
-	awardEXP(combat, userId) {
-		console.debug("quick-combat | skipping award experience for PF2e")
+	async actor_update(actor, init) {
+		//v10 update
+		await actor.update({"system.attributes.initiative.ability": init})
+		//v11 update
+		await actor.update({"system.attributes.initiative.statistic": init})
+		//v12 update
+		await actor.update({"system.initiative.statistic": init})
 	}
 
 	async promptOwner(combatant, userId) {
@@ -71,10 +88,7 @@ export class pf2eCombat {
 			}
 		}
 		var init = await socket.executeAsUser(ask_initiative, user, this.init_options, combatant.actor.id)
-		//v10 update
-		await combatant.actor.update({"system.attributes.initiative.ability": init})
-		//v11 update
-		await combatant.actor.update({"system.attributes.initiative.statistic": init})
+		await this.actor_update(combatant.actor, init)
 		combatant.combat.rollInitiative([combatant.id], this.rollOptions(false))
 	}
 
@@ -102,7 +116,7 @@ export class pf2eCombat {
 				//if combatant is an NPC
 				if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 					console.log(`quick-combat | pf2e rolling fast_prompt NPC (perception) initiative for ${combatant.actor.name}`)
-					await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
+					await this.actor_update(combatant.actor, "perception")
 					await combatant.combat.rollInitiative([combatant.id], this.rollOptions())
 				}
 				//if combatant is a PC and npcroll is not set
@@ -114,7 +128,7 @@ export class pf2eCombat {
 			//pf2e assume perception for every token
 			else if (game.settings.get("quick-combat", "autoInit") == "fast") {
 				console.log(`quick-combat | pf2e rolling fast (perception) initiative for ${combatant.actor.name}`)
-				await combatant.actor.update({"system.attributes.initiative.statistic": "perception"})
+				await this.actor_update(combatant.actor, "perception")
 				//if combatant is an NPC
 				if (combatant.isNPC && game.settings.get("quick-combat", "initiative") != "pc") {
 					await combatant.combat.rollInitiative([combatant.id], this.rollOptions())
@@ -146,7 +160,7 @@ export class pf2eCombat {
 			var npcs = []
 			//only present one NPC for groups
 			if(game.settings.get("quick-combat", "group")) {
-				combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null).filter(function(item){
+				this.get_npcs(combat.combatants).filter(a => a.initiative == null).filter(function(item){
 					var i = npcs.findIndex(x => (x.actor.id == item.actor.id));
 					if(i <= -1){
 						npcs.push(item);
@@ -155,7 +169,7 @@ export class pf2eCombat {
 				  });
 			}
 			else {
-				npcs = combat.combatants.filter(a => a.isNPC).filter(a => a.initiative == null)
+				npcs = this.get_npcs(combat.combatants).filter(a => a.initiative == null)
 			}
 			//if there are not NPCs to roll then skip
 			if(npcs.length == 0) {
@@ -186,7 +200,7 @@ export class pf2eCombat {
 								}
 								//update actors to match initiative
 								console.debug(`quick-combat | updating ${npcs[i].actor.name} initiative to ${inits}`)
-								await npcs[i].actor.update({"system.attributes.initiative.statistic": inits})
+								await this.actor_update(npcs[i].actor, inits)
 								await combat.rollInitiative([npcs[i].id], this.rollOptions())
 							}
 							if(game.settings.get("quick-combat", "group")) {

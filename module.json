@@ -1,67 +1,65 @@
 {
-	"id": "quick-combat",
-	"title": "Quick Combat",
-	"description": "Enhances the Combat Experience, starts Combat Playlist and adds Experience to PCs after combat.",
-	"version": "This is auto replaced",
-	"compatibility": {
-	  "minimum": "10",
-	  "verified": "11",
-	  "maximum": "11"
-	},
-	"authors": [
-	  {
-		"name": "lostix",
-		"url": "https://github.com/veevelder/quick-combat",
-		"flags": {}
-	  }
-	],
-	"esmodules": [
-	  "scripts/quick-combat.js"
-	],
-	"styles": [
-	  "styles/quick-combat.css"
-	],
-	"languages": [
-	  {
-		"lang": "en",
-		"name": "English",
-		"path": "lang/en.json",
-		"flags": {}
-	  },
-	  {
-		"lang": "ja",
-		"name": "日本語",
-		"path": "lang/ja.json",
-		"flags": {}
-	  }
-	],
-	"packs": [
-	  {
-		"name": "quick-combat-features",
-		"label": "Quick Combat Features",
-		"system": "dnd5e",
-		"path": "packs/quick-combat-features.db",
-		"type": "Item",
-		"private": false,
-		"flags": {}
-	  }
-	],
-	"relationships": {
-	  "requires": [
-		{
-		  "id": "socketlib",
-		  "type": "module",
-		  "manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/develop/module.json",
-		  "compatibility": {
-			"verified": "1.0.12"
-		  }
-		}
-	  ]
-	},
-	"socket": true,
-	"url": "This is auto replaced",
-	"manifest": "This is auto replaced",
-	"download": "This is auto replaced",
-	"license": "LICENSE",
-	"readme": "README.md"
-  }
+    "id": "quick-combat",
+    "title": "Quick Combat",
+    "description": "Enhances the Combat Experience, starts Combat Playlist and adds Experience to PCs after combat.",
+    "version": "This is auto replaced",
+    "compatibility": {
+        "minimum": "10",
+        "verified": "12",
+        "maximum": "12"
+    },
+    "authors": [
+        {
+            "name": "lostix",
+            "url": "https://github.com/veevelder/quick-combat",
+            "flags": {}
+        }
+    ],
+    "esmodules": [
+        "scripts/quick-combat.js"
+    ],
+    "styles": [
+        "styles/quick-combat.css"
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "lang/en.json",
+            "flags": {}
+        },
+        {
+            "lang": "ja",
+            "name": "日本語",
+            "path": "lang/ja.json",
+            "flags": {}
+        }
+    ],
+    "packs": [],
+    "relationships": {
+        "requires": [
+            {
+                "id": "socketlib",
+                "type": "module",
+                "manifest": "https://raw.githubusercontent.com/manuelVo/foundryvtt-socketlib/develop/module.json",
+                "compatibility": {
+                    "verified": "1.0.12"
+                }
+            },
+            {
+                "id": "tagger",
+                "type": "module",
+                "manifest": "https://github.com/fantasycalendar/FoundryVTT-Tagger/releases/latest/download/module.json",
+                "compatibility": {
+                    "verified": "1.5.1"
+                }
+            }
+        ]
+    },
+    "socket": true,
+    "url": "This is auto replaced",
+    "manifest": "This is auto replaced",
+    "download": "This is auto replaced",
+    "license": "LICENSE",
+    "readme": "README.md"
+}
