@@ -1,10 +1,3 @@
-#quick-combat-playlists .re-border {
-    border: 1px solid var(--color-underline-header);
-    border-radius: 5px;
-    padding: 3px;
-    margin-bottom: 5px;
-}
-
 #quick-combat-playlists .remove-playlist:hover {
     text-shadow: 0 0 5px red
 }
@@ -48,4 +41,9 @@
     flex: none;
     margin: 0;
     text-align: center;
+}
+
+
+#quick-combat-playlists .actionButtons {
+    display: inline-block;
 }

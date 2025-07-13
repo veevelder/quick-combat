@@ -182,39 +182,38 @@ export class pf2eCombat extends genericCombat {
 			for(var i = 0; i < npcs.length; i++) {
 				npc_defaults += `<select id='inits_${npcs[i].actor.id}'>${this.init_options}</select><label style='padding-left:10px' for='inits_${npcs[i].actor.id}'>${npcs[i].actor.name}</label></br>`
 			}
-			new Dialog({
-				title: "Update NPC Initiative",
-				content: `<label for='all_npcs'>${game.i18n.localize("QuickCombat.PF2E.groupMSG")}</label><input type='checkbox' id='all_npcs' checked><select id='inits'>${this.init_options}</select>
-				<p class="notes">${game.i18n.localize("QuickCombat.PF2E.groupHint")}</p><hr>${npc_defaults}`,
-				buttons: {
-					button: {
-						label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
-						icon: "<i class='fa-solid fa-dice'></i>",
-						callback: async (html) => {
-							var inits = html.find("select#inits").find(":selected").val()
-							var all_npcs = html.find("input#all_npcs").prop("checked")
-							for(var i = 0; i < npcs.length; i++) {
-								//get init type if checkbox is enabled or not
-								if (!all_npcs) {
-									inits = html.find("select#inits_" + npcs[i].actor.id).find(":selected").val()
-								}
-								//update actors to match initiative
-								console.debug(`quick-combat | updating ${npcs[i].actor.name} initiative to ${inits}`)
-								await this.actor_update(npcs[i].actor, inits)
-								await combat.rollInitiative([npcs[i].id], this.rollOptions())
+			new foundry.applications.api.DialogV2({
+				title: game.i18n.localize("QuickCombat.PF2E.npcTitle"),
+				content: `<label for='all_npcs'>${game.i18n.localize("QuickCombat.PF2E.groupMSG")}</label><input type='checkbox' id='all_npcs' checked><select id='inits'>${this.init_options}</select><p class="notes">${game.i18n.localize("QuickCombat.PF2E.groupHint")}</p><hr>${npc_defaults}`,
+				buttons: [{
+					label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
+					icon: "<i class='fa-solid fa-dice'></i>",
+					callback: async (event, button, something) => {
+						event.preventDefault();
+						const form = button.parentNode.parentNode
+						let inits = form.querySelector("select#inits").value
+						const all_npcs = form.querySelector("input#all_npcs").checked
+						for(var i = 0; i < npcs.length; i++) {
+							//get init type if checkbox is enabled or not
+							if (!all_npcs) {
+								inits = form.querySelector(`select#inits_${npcs[i].actor.id}`).value
 							}
-							if(game.settings.get("quick-combat", "group")) {
-								//get the rest of the NPCS to set initiatives
-								var the_rest = game.combat.combatants.filter(a => a.isNPC && a.initiative == null)
-								for (var i = 0; i < the_rest.length; i++) {
-									var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
-									await the_rest[i].update({"initiative": initiative})
-								}
+							//update actors to match initiative
+							console.debug(`quick-combat | updating ${npcs[i].actor.name} initiative to ${inits}`)
+							await this.actor_update(npcs[i].actor, inits)
+							await combat.rollInitiative([npcs[i].id], this.rollOptions())
+						}
+						if(game.settings.get("quick-combat", "group")) {
+							//get the rest of the NPCS to set initiatives
+							var the_rest = game.combat.combatants.filter(a => a.isNPC && a.initiative == null)
+							for (var i = 0; i < the_rest.length; i++) {
+								var initiative = game.combat.combatants.find(a => a.actor.id == the_rest[i].actor.id && a.initiative != null)?.initiative
+								await the_rest[i].update({"initiative": initiative})
 							}
 						}
 					}
-				},
-			}).render(true);
+				}]
+			}).render({ force: true });
 		}
 	}
 }

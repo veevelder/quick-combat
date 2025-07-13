@@ -4,21 +4,21 @@ export let socket;
 export async function ask_initiative(npc_options, actor_id) {
 	return new Promise((resolve, reject) => {
 		var actor = game.actors.get(actor_id)
-		new Dialog({
+
+		new foundry.applications.api.DialogV2({
 			title: game.i18n.localize("QuickCombat.PF2E.title"),
 			content: `${actor.name}</br><select id='inits'>${npc_options}</select>`,
-			buttons: {
-				button: {
-					label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
-					icon: "<i class='fas fa-check'></i>",
-					callback: async  (html) => {
-						var inits = html.find("select#inits").find(":selected").val()
-						console.debug(`quick-combat | updating ${actor.name} initiative to ${inits}`)
-						resolve(inits)
-					}
+			buttons: [{
+				label: game.i18n.localize("QuickCombat.PF2E.updateButton"),
+				icon: "<i class='fas fa-check'></i>",
+				callback: async  (event, button) => {
+					event.preventDefault();
+					const inits = button.parentNode.parentNode.querySelector("select#inits").value
+					console.debug(`quick-combat | updating ${actor.name} initiative to ${inits}`)
+					resolve(inits)
 				}
-			},
-		}).render(true);
+			}]
+		}).render({ force: true });
 	})
 }
 
@@ -241,12 +241,16 @@ export async function startCombat() {
 		return
 	}
 	console.log("quick-combat | starting combat")
-	await game.combat.startCombat();
+	if (game.combat) {
+		await game.combat.startCombat();
+	}
 }
 
 export async function endCombat() {
 	console.debug("quick-combat | combat found stopping combat")
-	game.combat.endCombat();
+	if (game.combat) {
+		game.combat.endCombat();
+	}
 }
 
 //if hotkey was pressed create combat, add combatants, start combat

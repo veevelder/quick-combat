@@ -1,4 +1,4 @@
-<form class="flexcol" autocomplete='off' onsubmit="event.preventDefault();">
+<section class="flexcol" autocomplete='off' onsubmit="event.preventDefault();">
 	<header class="flex0">
 		<p>{{localize 'QuickCombat.playlist.intro1'}}</p>
 		<p>{{localize 'QuickCombat.playlist.intro2'}}</p>
@@ -20,7 +20,7 @@
 					<label>{{localize 'QuickCombat.remove.label'}}</label>
 				</div>
 			</li>
-			{{#each qc_playlists as |playlist idx|}}
+			{{#each playlists as |playlist idx|}}
 			<li class="table-result flexrow">
 				<div class="result-input">
 					<div class="form-group">
@@ -56,17 +56,21 @@
 						{{/if}}
 					</div>
 				</div>
-				<div class="result-controls">
-					<i class='far fa-trash-alt remove-playlist' data-idx="{{idx}}"></i>
-				</div>
+				<button class="result-controls" data-action="removePlaylist" data-idx="{{idx}}">
+					<i class='far fa-trash-alt'></i>
+				</button>
 			</li>
 			{{/each}}
 		</ol>
 	</section>
-	<footer class='sheet-footer flexrow'>
-		<div class="form-group">
-			<button type='submit' name='submit'><i class='far fa-save'></i>{{localize 'QuickCombat.save'}}</button>
-			<button class='add-playlist'><i class='far fa-plus-square'></i>{{localize 'QuickCombat.add'}}</button>
-		</div>
+	<footer>
+		<button class="actionButtons" data-action="savePlaylists">
+			<i class='far fa-save'></i>
+			{{localize 'QuickCombat.save'}}
+		</button>
+		<button class="actionButtons" data-action="addPlaylist">
+			<i class='far fa-plus-square'></i>
+			{{localize 'QuickCombat.add'}}
+		</button>
 	</footer>
-</form>
+</section>
